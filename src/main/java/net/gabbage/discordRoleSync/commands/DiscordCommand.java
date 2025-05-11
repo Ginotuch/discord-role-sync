@@ -2,7 +2,8 @@ package net.gabbage.discordRoleSync.commands;
 
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.commands.discord.IDiscordSubCommand;
-import net.gabbage.discordRoleSync.commands.discord.InspectSubCommand; // Import InspectSubCommand
+import net.gabbage.discordRoleSync.commands.discord.InspectSubCommand;
+import net.gabbage.discordRoleSync.commands.discord.ManualLinkSubCommand; // Import ManualLinkSubCommand
 import net.gabbage.discordRoleSync.commands.discord.ReloadSubCommand;
 import net.gabbage.discordRoleSync.commands.discord.StatusSubCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
@@ -36,7 +37,8 @@ public class DiscordCommand implements CommandExecutor, TabCompleter {
 
         // Register subcommands
         registerSubCommand(new ReloadSubCommand());
-        registerSubCommand(new InspectSubCommand()); // Register InspectSubCommand
+        registerSubCommand(new InspectSubCommand());
+        registerSubCommand(new ManualLinkSubCommand()); // Register ManualLinkSubCommand
         registerSubCommand(this.defaultSubCommand); // Register status as a fallback/default
     }
 

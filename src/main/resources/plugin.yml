@@ -36,6 +36,9 @@ permissions:
   discordrolesync.inspect:
     description: Allows staff to inspect a player's Discord link status.
     default: op
+  discordrolesync.manuallink:
+    description: Allows staff to manually link a Minecraft account to a Discord ID.
+    default: op
   discordrolesync.reload:
     description: Allows users to reload the DiscordRoleSync plugin.
     default: op

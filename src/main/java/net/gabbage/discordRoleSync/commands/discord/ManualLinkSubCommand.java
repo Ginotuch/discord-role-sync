@@ -1,0 +1,128 @@
+package net.gabbage.discordRoleSync.commands.discord;
+
+import net.dv8tion.jda.api.entities.User;
+import net.gabbage.discordRoleSync.DiscordRoleSync;
+import net.gabbage.discordRoleSync.managers.ConfigManager;
+import net.gabbage.discordRoleSync.managers.DiscordManager;
+import net.gabbage.discordRoleSync.service.RoleSyncService;
+import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+public class ManualLinkSubCommand implements IDiscordSubCommand {
+
+    @Override
+    public String getName() {
+        return "manuallink";
+    }
+
+    @Override
+    public String getPermission() {
+        return "discordrolesync.manuallink";
+    }
+
+    @Override
+    public void execute(@NotNull DiscordRoleSync plugin, @NotNull CommandSender sender, @NotNull String[] args) {
+        ConfigManager configManager = plugin.getConfigManager();
+
+        if (args.length < 2) {
+            sender.sendMessage(configManager.getMessage("manuallink.usage"));
+            return;
+        }
+
+        String minecraftUsername = args[0];
+        String discordIdString = args[1];
+
+        OfflinePlayer targetOfflinePlayer = Bukkit.getOfflinePlayer(minecraftUsername);
+        if (!targetOfflinePlayer.hasPlayedBefore() && !targetOfflinePlayer.isOnline()) {
+            sender.sendMessage(configManager.getMessage("manuallink.player_not_found", "%mc_username%", minecraftUsername));
+            return;
+        }
+        UUID targetUUID = targetOfflinePlayer.getUniqueId();
+        String actualMcUsername = targetOfflinePlayer.getName() != null ? targetOfflinePlayer.getName() : minecraftUsername;
+
+        try {
+            Long.parseLong(discordIdString); // Validate if it's a number
+        } catch (NumberFormatException e) {
+            sender.sendMessage(configManager.getMessage("manuallink.invalid_discord_id"));
+            return;
+        }
+
+        LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
+        DiscordManager discordManager = plugin.getDiscordManager();
+        RoleSyncService roleSyncService = plugin.getRoleSyncService();
+
+        // Check if Minecraft account is already linked
+        if (linkedPlayersManager.isMcAccountLinked(targetUUID)) {
+            String existingDiscordId = linkedPlayersManager.getDiscordId(targetUUID);
+            if (discordManager != null && discordManager.getJda() != null) {
+                discordManager.getJda().retrieveUserById(existingDiscordId).queue(
+                    discordUser -> sender.sendMessage(configManager.getMessage("manuallink.mc_already_linked",
+                            "%mc_username%", actualMcUsername,
+                            "%discord_user_tag%", discordUser.getAsTag(),
+                            "%discord_user_id%", existingDiscordId)),
+                    failure -> sender.sendMessage(configManager.getMessage("manuallink.error_retrieving_existing_discord_user",
+                            "%mc_username%", actualMcUsername,
+                            "%discord_user_id%", existingDiscordId))
+                );
+            } else {
+                 sender.sendMessage(configManager.getMessage("manuallink.error_retrieving_existing_discord_user",
+                            "%mc_username%", actualMcUsername,
+                            "%discord_user_id%", existingDiscordId));
+            }
+            return;
+        }
+
+        // Check if Discord ID is already linked
+        if (linkedPlayersManager.isDiscordAccountLinked(discordIdString)) {
+            UUID existingMcUUID = linkedPlayersManager.getMcUUID(discordIdString);
+            OfflinePlayer existingOfflinePlayer = Bukkit.getOfflinePlayer(existingMcUUID);
+            String existingMcUsername = existingOfflinePlayer.getName() != null ? existingOfflinePlayer.getName() : "an unknown Minecraft account";
+            sender.sendMessage(configManager.getMessage("manuallink.discord_already_linked",
+                    "%discord_user_id%", discordIdString,
+                    "%mc_username%", existingMcUsername));
+            return;
+        }
+
+        // Perform the link
+        linkedPlayersManager.addLink(targetUUID, discordIdString);
+
+        // Asynchronously set nickname and synchronize roles
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            if (configManager.shouldSynchronizeDiscordNickname()) {
+                if (discordManager != null) { // Ensure discordManager is not null
+                    discordManager.setDiscordNickname(discordIdString, actualMcUsername);
+                }
+            }
+            if (roleSyncService != null) { // Ensure roleSyncService is not null
+                 roleSyncService.synchronizeRoles(targetUUID, discordIdString);
+            }
+        });
+
+        sender.sendMessage(configManager.getMessage("manuallink.success",
+                "%mc_username%", actualMcUsername,
+                "%discord_user_id%", discordIdString));
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull DiscordRoleSync plugin, @NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length == 1) {
+            List<String> playerNames = Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .collect(Collectors.toList());
+            return StringUtil.copyPartialMatches(args[0], playerNames, new ArrayList<>());
+        }
+        // No suggestions for Discord ID (args.length == 2 or more)
+        return Collections.emptyList();
+    }
+}

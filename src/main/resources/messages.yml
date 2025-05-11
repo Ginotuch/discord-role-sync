@@ -1,5 +1,5 @@
 # Message file version. Used by the plugin to determine if it should auto-update.
-_messages_version: 6
+_messages_version: 7
 
 # Set to true to prevent the plugin from automatically updating this file
 # if a new version with new default messages is released.
@@ -65,3 +65,13 @@ messages:
     linked_to: "  &aLinked &7to Discord: &e%discord_user_tag% &7(ID: &e%discord_user_id%&7)"
     not_linked: "  &cNot linked &7to any Discord account."
     error_retrieving_discord_user: "  &aLinked &7to Discord ID: &e%discord_user_id% &7(Could not retrieve Discord username)."
+  manuallink:
+    usage: "&cUsage: /discord manuallink <minecraft_username> <discord_id>"
+    player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."
+    invalid_discord_id: "&cInvalid Discord ID format. It should be a number."
+    mc_already_linked: "&cMinecraft account &e%mc_username%&c is already linked to Discord user &e%discord_user_tag% &7(ID: &e%discord_user_id%&c)."
+    discord_already_linked: "&cDiscord ID &e%discord_user_id%&c is already linked to Minecraft account &e%mc_username%&c."
+    success: "&5[DISCORD] &r&aSuccessfully linked Minecraft account &e%mc_username%&a to Discord ID &e%discord_user_id%&a. Roles and nickname will sync shortly."
+    error_linking: "&cAn unexpected error occurred while trying to manually link the accounts."
+    error_retrieving_existing_discord_user: "&cMinecraft account &e%mc_username%&c is already linked to Discord ID &e%discord_user_id%&c (Could not retrieve Discord username)."
+    error_retrieving_existing_mc_user: "&cDiscord ID &e%discord_user_id%&c is already linked to a Minecraft account (Could not retrieve Minecraft username)."

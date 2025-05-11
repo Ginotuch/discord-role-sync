@@ -1,0 +1,7 @@
+name: DiscordRoleSync
+version: '1.0-SNAPSHOT'
+main: net.gabbage.discordRoleSync.DiscordRoleSync
+api-version: '1.21'
+authors: [ Ginotuch ]
+description: Syncs in-game roles to Discord roles
+website: gabbage.net

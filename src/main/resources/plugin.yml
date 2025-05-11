@@ -5,3 +5,17 @@ api-version: '1.21'
 authors: [ Ginotuch ]
 description: Syncs in-game roles to Discord roles
 website: gabbage.net
+commands:
+  link:
+    description: Links your Minecraft account to your Discord account or accepts a pending link request.
+    usage: "/link"
+  unlink:
+    description: Unlinks your Minecraft account from your Discord account.
+    usage: "/unlink"
+permissions:
+  discordrolesync.link:
+    description: Allows users to use the /link command.
+    default: true
+  discordrolesync.unlink:
+    description: Allows users to use the /unlink command.
+    default: true

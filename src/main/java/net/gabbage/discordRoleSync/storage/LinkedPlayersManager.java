@@ -30,7 +30,18 @@ public class LinkedPlayersManager {
 
     public void loadLinkedPlayers() {
         if (!linkedPlayersFile.exists()) {
-            plugin.saveResource("linked_players.yml", false); // Save a default empty file if it doesn't exist
+            try {
+                // Ensure the plugin's data folder exists
+                if (!plugin.getDataFolder().exists()) {
+                    plugin.getDataFolder().mkdirs();
+                }
+                // Create an empty linked_players.yml if it doesn't exist
+                if (linkedPlayersFile.createNewFile()) {
+                    plugin.getLogger().info("Created new empty linked_players.yml file.");
+                }
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not create linked_players.yml file.", e);
+            }
         }
         linkedPlayersConfig = YamlConfiguration.loadConfiguration(linkedPlayersFile);
         mcToDiscordLinks.clear();

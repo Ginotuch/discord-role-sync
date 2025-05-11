@@ -102,31 +102,67 @@ public class DiscordCommandListener extends ListenerAdapter {
         );
         // Run on Bukkit's main thread to interact with player
         plugin.getServer().getScheduler().runTask(plugin, () -> {
-            String textToMakeClickable = "[HERE]";
-            // The config message uses "&e[HERE]", so we search for its translated version
-            String translatedClickableTextWithColor = ChatColor.YELLOW + textToMakeClickable;
+            // ingameMessage already has color codes translated (e.g., &e -> §e)
+            // and placeholders like %link_code% replaced with the actual code.
 
-            int clickableStartIndex = ingameMessage.indexOf(translatedClickableTextWithColor);
+            String hereClickableText = "[HERE]";
+            String linkCommandClickableText = "/link " + newRequest.getConfirmationCode();
 
-            if (clickableStartIndex != -1) {
-                String part1Str = ingameMessage.substring(0, clickableStartIndex);
-                String part2Str = ingameMessage.substring(clickableStartIndex + translatedClickableTextWithColor.length());
+            // Find the §e colored versions in the message string
+            String herePattern = ChatColor.YELLOW + hereClickableText;
+            String linkCommandPattern = ChatColor.YELLOW + linkCommandClickableText;
+
+            int hereStartIndex = ingameMessage.indexOf(herePattern);
+            int linkCommandStartIndex = ingameMessage.indexOf(linkCommandPattern);
+
+            if (hereStartIndex != -1 && linkCommandStartIndex != -1 && hereStartIndex < linkCommandStartIndex) {
+                // Both patterns found in the expected order
+
+                // Part 1: Text before "[HERE]"
+                String textBeforeHere = ingameMessage.substring(0, hereStartIndex);
+                TextComponent part1Comp = new TextComponent(TextComponent.fromLegacyText(textBeforeHere));
+
+                // Part 2: Clickable "[HERE]"
+                TextComponent hereClickComp = new TextComponent(hereClickableText);
+                hereClickComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                hereClickComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
+                // hereClickComp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Click to link with code")));
+
+
+                // Part 3: Text between "[HERE]" and "/link CODE"
+                String textBetween = ingameMessage.substring(hereStartIndex + herePattern.length(), linkCommandStartIndex);
+                TextComponent part2Comp = new TextComponent(TextComponent.fromLegacyText(textBetween));
+
+                // Part 4: Clickable "/link CODE"
+                TextComponent linkCmdClickComp = new TextComponent(linkCommandClickableText);
+                linkCmdClickComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                linkCmdClickComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
+                // linkCmdClickComp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Click to link with code")));
+
+                // Part 5: Text after "/link CODE"
+                String textAfterLinkCommand = ingameMessage.substring(linkCommandStartIndex + linkCommandPattern.length());
+                TextComponent part3Comp = new TextComponent(TextComponent.fromLegacyText(textAfterLinkCommand));
+
+                targetPlayer.spigot().sendMessage(part1Comp, hereClickComp, part2Comp, linkCmdClickComp, part3Comp);
+
+            } else if (hereStartIndex != -1) {
+                // Fallback: Only "[HERE]" is made clickable (original logic if linkCommandPattern isn't found or order is wrong)
+                String part1Str = ingameMessage.substring(0, hereStartIndex);
+                String part2Str = ingameMessage.substring(hereStartIndex + herePattern.length());
 
                 TextComponent part1Component = new TextComponent(TextComponent.fromLegacyText(part1Str));
-                
-                TextComponent clickableComponent = new TextComponent(textToMakeClickable);
-                clickableComponent.setColor(net.md_5.bungee.api.ChatColor.YELLOW); // Set color for [HERE]
+                TextComponent clickableComponent = new TextComponent(hereClickableText);
+                clickableComponent.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
                 clickableComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
-                // Optionally, add a hover event:
-                // clickableComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[]{new TextComponent("Click to confirm link with code " + newRequest.getConfirmationCode())}));
-
                 TextComponent part2Component = new TextComponent(TextComponent.fromLegacyText(part2Str));
 
                 targetPlayer.spigot().sendMessage(part1Component, clickableComponent, part2Component);
+                plugin.getLogger().info("Sent link request to " + targetPlayer.getName() + " with only [HERE] clickable as full pattern was not matched as expected.");
+
             } else {
-                // Fallback if the specific "[HERE]" text isn't found
+                // Fallback: No clickable parts found, send plain message
                 targetPlayer.sendMessage(ingameMessage);
-                plugin.getLogger().info("Sent plain link request message to " + targetPlayer.getName() + " as clickable pattern was not found in: " + ingameMessage);
+                plugin.getLogger().info("Sent plain link request message to " + targetPlayer.getName() + " as no clickable patterns were found in: " + ingameMessage);
             }
         });
 

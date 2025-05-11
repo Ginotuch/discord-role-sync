@@ -35,7 +35,8 @@ public final class DiscordRoleSync extends JavaPlugin {
 
         // Initialize Configuration Manager
         configManager = new ConfigManager(this);
-        configManager.loadConfig();
+        configManager.loadMainConfig(); // Load main config.yml
+        configManager.loadMessagesConfig(); // Load messages.yml with update logic
 
         // Initialize Storage for Linked Players
         linkedPlayersManager = new LinkedPlayersManager(this);

@@ -53,6 +53,25 @@ public class LinkManager {
 
         linkedPlayersManager.addLink(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
         pendingRequests.remove(minecraftPlayerUUID);
+
+        // Set Discord Nickname if feature is enabled
+        if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            Player player = plugin.getServer().getPlayer(request.getMinecraftPlayerUUID());
+            if (player != null && player.isOnline()) { // Ensure player is online to get current name
+                plugin.getDiscordManager().setDiscordNickname(request.getDiscordUserId(), player.getName());
+            } else {
+                // If player is not online, we might need to fetch their last known name or skip.
+                // For now, we'll only set it if they are online during linking.
+                // Alternatively, store the name in LinkRequest or fetch from OfflinePlayer.
+                OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(request.getMinecraftPlayerUUID());
+                if (offlinePlayer.getName() != null) {
+                     plugin.getDiscordManager().setDiscordNickname(request.getDiscordUserId(), offlinePlayer.getName());
+                } else {
+                    plugin.getLogger().warning("Could not set Discord nickname for " + request.getDiscordUserId() + ": Minecraft player " + request.getMinecraftPlayerUUID() + " name not found.");
+                }
+            }
+        }
+
         plugin.getRoleSyncService().synchronizeRoles(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
         plugin.getLogger().info("Player " + minecraftPlayerUUID + " successfully linked with Discord user " + request.getFullDiscordName() + " (" + request.getDiscordUserId() + "). Initial role sync triggered.");
         return true;
@@ -73,7 +92,13 @@ public class LinkManager {
         UUID playerUUID = player.getUniqueId();
         if (linkedPlayersManager.isMcAccountLinked(playerUUID)) {
             String discordId = linkedPlayersManager.getDiscordId(playerUUID);
-            linkedPlayersManager.removeLinkByMcUUID(playerUUID);
+            linkedPlayersManager.removeLinkByMcUUID(playerUUID); // This also removes from discordToMcLinks
+
+            // Reset Discord Nickname if feature is enabled
+            if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+                plugin.getDiscordManager().resetDiscordNickname(discordId);
+            }
+
             plugin.getLogger().info("Player " + player.getName() + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ".");
             plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId);
             return true;

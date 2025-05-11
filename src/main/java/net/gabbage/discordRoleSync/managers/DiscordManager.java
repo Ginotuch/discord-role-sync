@@ -116,6 +116,69 @@ public class DiscordManager {
         return jda;
     }
 
+    public void setDiscordNickname(String userId, String nickname) {
+        if (jda == null || !plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            return;
+        }
+        String guildId = plugin.getConfigManager().getDiscordGuildId();
+        if (guildId == null || guildId.isEmpty()) {
+            plugin.getLogger().fine("Cannot set Discord nickname: Guild ID not configured.");
+            return;
+        }
+        Guild guild = jda.getGuildById(guildId);
+        if (guild == null) {
+            plugin.getLogger().warning("Cannot set Discord nickname: Guild with ID " + guildId + " not found.");
+            return;
+        }
+
+        guild.retrieveMemberById(userId).queue(member -> {
+            try {
+                member.modifyNickname(nickname).reason("Linked to Minecraft account: " + nickname).queue(
+                        success -> plugin.getLogger().info("Set nickname for " + member.getUser().getAsTag() + " to '" + nickname + "' in guild " + guild.getName()),
+                        failure -> plugin.getLogger().warning("Failed to set nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + ": " + failure.getMessage())
+                );
+            } catch (InsufficientPermissionException e) {
+                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to set nickname for " + member.getUser().getAsTag() + ".");
+            } catch (HierarchyException e) {
+                plugin.getLogger().warning("Cannot set nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+            }
+        }, failure -> plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to set nickname."));
+    }
+
+    public void resetDiscordNickname(String userId) {
+        if (jda == null || !plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            return;
+        }
+        String guildId = plugin.getConfigManager().getDiscordGuildId();
+        if (guildId == null || guildId.isEmpty()) {
+            plugin.getLogger().fine("Cannot reset Discord nickname: Guild ID not configured.");
+            return;
+        }
+        Guild guild = jda.getGuildById(guildId);
+        if (guild == null) {
+            plugin.getLogger().warning("Cannot reset Discord nickname: Guild with ID " + guildId + " not found.");
+            return;
+        }
+
+        guild.retrieveMemberById(userId).queue(member -> {
+            try {
+                // Check if the current nickname is one that the bot might have set (e.g., matches a known player name pattern or simply reset if any nickname exists)
+                // For simplicity, we'll reset it if it's not null or empty, assuming the bot might have set it.
+                // A more robust check might involve storing if the bot set the nickname.
+                if (member.getNickname() != null && !member.getNickname().isEmpty()) {
+                    member.modifyNickname(null).reason("Unlinked from Minecraft account").queue(
+                            success -> plugin.getLogger().info("Reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName()),
+                            failure -> plugin.getLogger().warning("Failed to reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + ": " + failure.getMessage())
+                    );
+                }
+            } catch (InsufficientPermissionException e) {
+                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to reset nickname for " + member.getUser().getAsTag() + ".");
+            } catch (HierarchyException e) {
+                plugin.getLogger().warning("Cannot reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+            }
+        }, failure -> plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to reset nickname."));
+    }
+
     public void sendDirectMessage(String userId, String message) {
         if (jda == null) {
             plugin.getLogger().warning("Attempted to send DM while JDA is not initialized.");

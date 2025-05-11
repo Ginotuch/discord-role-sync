@@ -17,6 +17,9 @@ sync:
 linking:
   # How long in minutes a link request from Discord to Minecraft remains valid.
   request-timeout-minutes: 5
+  # Set Discord nickname to Minecraft username upon linking, and remove it on unlinking.
+  # The bot needs the "Manage Nicknames" permission in Discord for this to work.
+  synchronize-discord-nickname: true
 
 # Role Synchronization Rules
 roles:

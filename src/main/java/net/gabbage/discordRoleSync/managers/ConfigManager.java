@@ -57,6 +57,10 @@ public class ConfigManager {
         return config.getInt("linking.request-timeout-minutes", 5);
     }
 
+    public boolean shouldSynchronizeDiscordNickname() {
+        return config.getBoolean("linking.synchronize-discord-nickname", true);
+    }
+
     public String getMessage(String key, String... replacements) {
         String message = config.getString("messages." + key, "&cMessage not found: " + key);
         if (message == null) return "&cMessage not found: messages." + key; // Should not happen with default

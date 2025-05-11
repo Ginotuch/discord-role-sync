@@ -1,9 +1,12 @@
 package net.gabbage.discordRoleSync;
 
 import net.gabbage.discordRoleSync.commands.LinkCommand;
+import net.gabbage.discordRoleSync.commands.LinkCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
+import net.gabbage.discordRoleSync.managers.LinkManager;
+import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class DiscordRoleSync extends JavaPlugin {
@@ -11,6 +14,8 @@ public final class DiscordRoleSync extends JavaPlugin {
     private static DiscordRoleSync instance;
     private ConfigManager configManager;
     private DiscordManager discordManager;
+    private LinkedPlayersManager linkedPlayersManager;
+    private LinkManager linkManager;
 
     @Override
     public void onEnable() {
@@ -19,6 +24,12 @@ public final class DiscordRoleSync extends JavaPlugin {
         // Initialize Configuration Manager
         configManager = new ConfigManager(this);
         configManager.loadConfig();
+
+        // Initialize Storage for Linked Players
+        linkedPlayersManager = new LinkedPlayersManager(this);
+
+        // Initialize Link Manager
+        linkManager = new LinkManager(this, linkedPlayersManager);
 
         // Initialize Discord Manager and connect the bot
         // Note: The DiscordManager class itself was already provided by you and is assumed to be correct.
@@ -51,5 +62,13 @@ public final class DiscordRoleSync extends JavaPlugin {
 
     public DiscordManager getDiscordManager() {
         return discordManager;
+    }
+
+    public LinkedPlayersManager getLinkedPlayersManager() {
+        return linkedPlayersManager;
+    }
+
+    public LinkManager getLinkManager() {
+        return linkManager;
     }
 }

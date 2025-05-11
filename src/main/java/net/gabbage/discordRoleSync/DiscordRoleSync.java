@@ -1,6 +1,7 @@
 package net.gabbage.discordRoleSync;
 
 import net.gabbage.discordRoleSync.commands.LinkCommand;
+import net.gabbage.discordRoleSync.commands.ReloadCommand; // Added import
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
@@ -72,7 +73,7 @@ public final class DiscordRoleSync extends JavaPlugin {
         // Register Commands
         getCommand("link").setExecutor(new LinkCommand(this));
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
-        getCommand("drsreload").setExecutor(new commands.ReloadCommand(this)); // Register new command
+        getCommand("drsreload").setExecutor(new ReloadCommand(this)); // Register new command
 
         // Register Event Listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);

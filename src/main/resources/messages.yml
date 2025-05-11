@@ -46,7 +46,7 @@ messages:
     request_denied_discord: "Your link request to Minecraft player &e%mc_username%&r has been denied."
   discord_command:
     header: "&5&m------------------&r &5[DISCORD] &r&5&m-------------------"
-    footer: "&5&m----------------------------------------------------------"
+    footer: "&5&m----------------------------------------------"
     invite_link_text: "&a%discord_invite_url%" # Placeholder for the actual URL, will be made clickable
     invite_line: "&7Invite link: %discord_invite_link_component%"
     no_invite_configured: "&7Our Discord invite link is not configured yet."

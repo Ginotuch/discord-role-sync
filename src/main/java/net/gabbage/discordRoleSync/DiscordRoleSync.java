@@ -4,18 +4,10 @@ import net.gabbage.discordRoleSync.commands.LinkCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
-import net.gabbage.discordRoleSync.commands.LinkCommand;
-import net.gabbage.discordRoleSync.commands.UnlinkCommand;
-import net.gabbage.discordRoleSync.managers.ConfigManager;
-import net.gabbage.discordRoleSync.managers.DiscordManager;
-import net.gabbage.discordRoleSync.commands.LinkCommand;
-import net.gabbage.discordRoleSync.commands.UnlinkCommand;
-import net.gabbage.discordRoleSync.managers.ConfigManager;
-import net.gabbage.discordRoleSync.managers.DiscordManager;
-import net.gabbage.discordRoleSync.managers.LinkManager;
+import net.gabbage.discordRoleSync.listeners.PlayerJoinListener; // Import the new listener
 import net.gabbage.discordRoleSync.service.RoleSyncService;
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
-import net.gabbage.discordRoleSync.tasks.PeriodicSyncTask; // Import the new task
+import net.gabbage.discordRoleSync.tasks.PeriodicSyncTask;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -71,6 +63,9 @@ public final class DiscordRoleSync extends JavaPlugin {
         // Register Commands
         getCommand("link").setExecutor(new LinkCommand(this));
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
+
+        // Register Event Listeners
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
 
         // Schedule Periodic Sync Task
         long syncIntervalTicks = configManager.getSyncInterval() * 60L * 20L; // interval in minutes to ticks

@@ -34,9 +34,6 @@ public class DiscordManager {
                     .build();
             jda.awaitReady(); // Wait for JDA to be fully connected
             plugin.getLogger().info("Successfully connected to Discord as " + jda.getSelfUser().getAsTag());
-        } catch (LoginException e) {
-            plugin.getLogger().severe("Failed to log in to Discord: Invalid token?");
-            e.printStackTrace();
         } catch (InterruptedException e) {
             plugin.getLogger().severe("JDA connection was interrupted.");
             Thread.currentThread().interrupt();

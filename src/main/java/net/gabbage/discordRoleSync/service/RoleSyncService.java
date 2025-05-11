@@ -182,8 +182,9 @@ public class RoleSyncService {
             return;
         }
 
-        boolean playerHasIngameGroup = vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup());
-        plugin.getLogger().fine("[I2D] Player " + offlinePlayer.getName() + " in group " + mapping.ingameGroup() + " (World context: " + worldName + "): " + playerHasIngameGroup);
+        String primaryGroup = vaultPerms.getPrimaryGroup(worldName, offlinePlayer);
+        boolean playerHasIngameGroup = primaryGroup != null && primaryGroup.equalsIgnoreCase(mapping.ingameGroup());
+        plugin.getLogger().fine("[I2D] Player " + offlinePlayer.getName() + " primary group: " + (primaryGroup != null ? primaryGroup : "None") + ". Checking against mapped group: " + mapping.ingameGroup() + ". Has mapped group as primary: " + playerHasIngameGroup);
 
         Role discordRole = guild.getRoleById(mapping.discordRoleId());
         if (discordRole == null) {
@@ -235,8 +236,10 @@ public class RoleSyncService {
         }
 
         boolean memberHasDiscordRole = discordMember.getRoles().contains(discordRole);
-        boolean playerHasIngameGroup = vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup());
-        plugin.getLogger().fine("[D2I] Player " + playerName + " in group " + mapping.ingameGroup() + " (World context: " + worldName + "): " + playerHasIngameGroup);
+
+        String primaryGroup = vaultPerms.getPrimaryGroup(worldName, offlinePlayer);
+        boolean playerHasIngameGroup = primaryGroup != null && primaryGroup.equalsIgnoreCase(mapping.ingameGroup());
+        plugin.getLogger().fine("[D2I] Player " + playerName + " primary group: " + (primaryGroup != null ? primaryGroup : "None") + ". Checking against mapped group: " + mapping.ingameGroup() + ". Has mapped group as primary: " + playerHasIngameGroup);
 
         if (memberHasDiscordRole && !playerHasIngameGroup) {
             plugin.getLogger().fine("[D2I] Granting in-game group '" + mapping.ingameGroup() + "' to " + playerName + " because they have Discord role '" + discordRole.getName() + "'.");

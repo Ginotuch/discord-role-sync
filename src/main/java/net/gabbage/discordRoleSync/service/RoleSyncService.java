@@ -141,7 +141,7 @@ public class RoleSyncService {
 
         guild.retrieveMemberById(discordUserId).queue(
             discordMember -> {
-                plugin.getLogger().info("Synchronizing roles for MC: " + playerName + " (UUID: " + minecraftPlayerUUID + ") and Discord: " + discordMember.getUser().getAsTag() + " (ID: " + discordUserId + ")");
+                plugin.getLogger().fine("Synchronizing roles for MC: " + playerName + " (UUID: " + minecraftPlayerUUID + ") and Discord: " + discordMember.getUser().getAsTag() + " (ID: " + discordUserId + ")");
 
                 for (RoleMapping mapping : parsedMappings) {
                     plugin.getLogger().fine("Processing mapping: Ingame '" + mapping.ingameGroup() + "' <-> Discord Role '" + mapping.discordRoleName() + "' (ID: " + mapping.discordRoleId() + ") with direction: " + mapping.syncDirection());
@@ -190,7 +190,7 @@ public class RoleSyncService {
         if (playerHasIngameGroup && !memberHasDiscordRole) {
             try {
                 guild.addRoleToMember(discordMember, discordRole).reason("Role Sync: User has in-game group " + mapping.ingameGroup()).queue(
-                    success -> plugin.getLogger().info("[I2D] Added Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag() + " because they have in-game group '" + mapping.ingameGroup() + "'."),
+                    success -> plugin.getLogger().fine("[I2D] Added Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag() + " because they have in-game group '" + mapping.ingameGroup() + "'."),
                     failure -> plugin.getLogger().log(Level.WARNING, "[I2D] Failed to add Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag(), failure)
                 );
             } catch (InsufficientPermissionException e) {
@@ -201,7 +201,7 @@ public class RoleSyncService {
         } else if (!playerHasIngameGroup && memberHasDiscordRole) {
             try {
                 guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User no longer has in-game group " + mapping.ingameGroup()).queue(
-                    success -> plugin.getLogger().info("[I2D] Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " because they no longer have in-game group '" + mapping.ingameGroup() + "'."),
+                    success -> plugin.getLogger().fine("[I2D] Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " because they no longer have in-game group '" + mapping.ingameGroup() + "'."),
                     failure -> plugin.getLogger().log(Level.WARNING, "[I2D] Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag(), failure)
                 );
             } catch (InsufficientPermissionException e) {
@@ -233,22 +233,22 @@ public class RoleSyncService {
         plugin.getLogger().fine("[D2I] Player " + playerName + " in group " + mapping.ingameGroup() + " (World context: " + worldName + "): " + playerHasIngameGroup);
 
         if (memberHasDiscordRole && !playerHasIngameGroup) {
-            plugin.getLogger().info("[D2I] Granting in-game group '" + mapping.ingameGroup() + "' to " + playerName + " because they have Discord role '" + discordRole.getName() + "'.");
+            plugin.getLogger().fine("[D2I] Granting in-game group '" + mapping.ingameGroup() + "' to " + playerName + " because they have Discord role '" + discordRole.getName() + "'.");
             // Run on main thread for Bukkit API calls that modify player data
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (vaultPerms.playerAddGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world often means global or default world context for Vault
-                    plugin.getLogger().info("[D2I] Successfully added group '" + mapping.ingameGroup() + "' to " + playerName);
+                    plugin.getLogger().fine("[D2I] Successfully added group '" + mapping.ingameGroup() + "' to " + playerName);
                 } else {
                     plugin.getLogger().warning("[D2I] Failed to add group '" + mapping.ingameGroup() + "' to " + playerName + ". Check Vault-compatible permissions plugin logs.");
                 }
             });
 
         } else if (!memberHasDiscordRole && playerHasIngameGroup) {
-            plugin.getLogger().info("[D2I] Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " because they no longer have Discord role '" + discordRole.getName() + "'.");
+            plugin.getLogger().fine("[D2I] Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " because they no longer have Discord role '" + discordRole.getName() + "'.");
             // Run on main thread
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (vaultPerms.playerRemoveGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world
-                    plugin.getLogger().info("[D2I] Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName);
+                    plugin.getLogger().fine("[D2I] Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName);
                 } else {
                     plugin.getLogger().warning("[D2I] Failed to remove group '" + mapping.ingameGroup() + "' from " + playerName + ". Check Vault-compatible permissions plugin logs.");
                 }
@@ -258,7 +258,7 @@ public class RoleSyncService {
 
 
     public void clearRolesOnUnlink(UUID minecraftPlayerUUID, String discordUserId) {
-        plugin.getLogger().info("Attempting to clear/reset roles for unlinked player MC UUID: " + minecraftPlayerUUID + ", Discord ID: " + discordUserId);
+        plugin.getLogger().fine("Attempting to clear/reset roles for unlinked player MC UUID: " + minecraftPlayerUUID + ", Discord ID: " + discordUserId);
         if (parsedMappings == null || parsedMappings.isEmpty()) {
             plugin.getLogger().fine("No role mappings configured or loaded. Skipping role clearing for " + minecraftPlayerUUID);
             return;
@@ -283,7 +283,7 @@ public class RoleSyncService {
                                 if (discordRole != null && discordMember.getRoles().contains(discordRole)) {
                                     try {
                                         guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
-                                            success -> plugin.getLogger().info("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking."),
+                                            success -> plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking."),
                                             failure -> plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure)
                                         );
                                     } catch (InsufficientPermissionException e) {

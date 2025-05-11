@@ -79,8 +79,8 @@ public final class DiscordRoleSync extends JavaPlugin {
 
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
         getCommand("denylink").setExecutor(new DenyLinkCommand(this));
-        getCommand("discord").setExecutor(new DiscordCommand(this)); // Register DiscordCommand
-        getCommand("drsreload").setExecutor(new ReloadCommand(this));
+        getCommand("discord").setExecutor(new DiscordCommand(this)); // DiscordCommand now handles its own subcommands
+        // getCommand("drsreload").setExecutor(new ReloadCommand(this)); // Removed old reload command registration
 
         // Register Event Listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);

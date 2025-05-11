@@ -11,10 +11,17 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class DiscordCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class DiscordCommand implements CommandExecutor, TabCompleter {
 
     private final DiscordRoleSync plugin;
 
@@ -32,6 +39,12 @@ public class DiscordCommand implements CommandExecutor {
         Player player = (Player) sender;
         ConfigManager configManager = plugin.getConfigManager();
 
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            handleReloadSubcommand(player, configManager);
+            return true;
+        }
+
+        // Default behavior: show status/invite
         if (!player.hasPermission("discordrolesync.discord")) {
             player.sendMessage(configManager.getMessage("discord_command.no_permission"));
             return true;
@@ -109,5 +122,37 @@ public class DiscordCommand implements CommandExecutor {
         player.sendMessage(configManager.getMessage("discord_command.footer"));
 
         return true;
+    }
+
+    private void handleReloadSubcommand(Player player, ConfigManager configManager) {
+        if (!player.hasPermission("discordrolesync.reload")) {
+            player.sendMessage(configManager.getMessage("reload.no_permission"));
+            return;
+        }
+
+        player.sendMessage(ChatColor.YELLOW + "Reloading DiscordRoleSync plugin...");
+        try {
+            plugin.reloadPlugin();
+            player.sendMessage(configManager.getMessage("reload.success"));
+        } catch (Exception e) {
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error during plugin reload triggered by /discord reload command", e);
+            player.sendMessage(configManager.getMessage("reload.failure"));
+        }
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (args.length == 1) {
+            List<String> subcommands = new ArrayList<>();
+            if (sender.hasPermission("discordrolesync.reload")) {
+                subcommands.add("reload");
+            }
+            // Add other subcommands here in the future if needed
+
+            return subcommands.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }

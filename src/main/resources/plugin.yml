@@ -12,10 +12,6 @@ commands:
   unlink:
     description: Unlinks your Minecraft account from your Discord account.
     usage: "/unlink"
-  drsreload:
-    description: Reloads the DiscordRoleSync plugin and its configuration.
-    usage: "/drsreload"
-    permission: discordrolesync.reload
   denylink:
     description: Denies a pending link request from Discord.
     usage: "/denylink"

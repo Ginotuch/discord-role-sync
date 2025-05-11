@@ -306,26 +306,27 @@ public class RoleSyncService {
             plugin.getLogger().warning("JDA not available. Cannot clear Discord roles for " + playerName + " (Discord ID: " + discordUserId + ")");
         }
 
-        // Clear In-Game roles
-        if (vaultPerms == null) {
-            plugin.getLogger().severe("Vault permissions not available. Skipping in-game role clearing for " + playerName);
-            return;
-        }
+        // Clear In-Game roles - This section is now disabled as per user request.
+        // plugin.getLogger().info("In-game group removal upon unlinking is currently disabled.");
+        // if (vaultPerms == null) {
+        //     plugin.getLogger().severe("Vault permissions not available. Skipping in-game role clearing for " + playerName);
+        //     return;
+        // }
 
-        for (RoleMapping mapping : parsedMappings) {
-            // We attempt to remove the group if it was part of the mappings,
-            // as we assume it might have been added by this plugin.
-            // Check if player is in group before attempting removal.
-            if (vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup())) {
-                plugin.getLogger().info("Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " due to unlinking.");
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    if (vaultPerms.playerRemoveGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world
-                        plugin.getLogger().info("Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink.");
-                    } else {
-                        plugin.getLogger().warning("Failed to remove group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink. Check Vault-compatible permissions plugin logs.");
-                    }
-                });
-            }
-        }
+        // for (RoleMapping mapping : parsedMappings) {
+        //     // We attempt to remove the group if it was part of the mappings,
+        //     // as we assume it might have been added by this plugin.
+        //     // Check if player is in group before attempting removal.
+        //     if (vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup())) {
+        //         plugin.getLogger().info("Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " due to unlinking.");
+        //         plugin.getServer().getScheduler().runTask(plugin, () -> {
+        //             if (vaultPerms.playerRemoveGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world
+        //                 plugin.getLogger().info("Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink.");
+        //             } else {
+        //                 plugin.getLogger().warning("Failed to remove group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink. Check Vault-compatible permissions plugin logs.");
+        //             }
+        //         });
+        //     }
+        // }
     }
 }

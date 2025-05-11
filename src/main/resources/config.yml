@@ -49,7 +49,7 @@ roles:
 # %link_code% - The unique code for the /link command
 messages:
   link:
-    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Type &e/link %link_code%&a or click &e[HERE]&a to link accounts."
+    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Click &e[HERE]&a or type &e/link %link_code%&a to link accounts."
     request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link <CODE>&r in-game to confirm (the code will be shown to them)."
     no_pending_request_ingame: "&cYou have no pending link requests. Ask a Discord user to use /link %your_mc_username% in the Discord server."
     link_code_missing_ingame: "&cPlease provide the link code. Usage: /link <CODE>"

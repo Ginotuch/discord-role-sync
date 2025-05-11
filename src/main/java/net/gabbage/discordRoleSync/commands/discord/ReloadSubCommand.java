@@ -30,15 +30,23 @@ public class ReloadSubCommand implements IDiscordSubCommand {
         // However, if called directly, this check would be useful.
         // For this structure, the dispatcher handles it.
 
-        sender.sendMessage(ChatColor.YELLOW + "Reloading DiscordRoleSync plugin...");
+        List<String> messagesToSend = new ArrayList<>();
+        messagesToSend.add(ChatColor.YELLOW + "Reloading DiscordRoleSync plugin...");
+
         try {
             plugin.reloadPlugin();
             // ConfigManager might be new, so get messages from the potentially new instance
-            sender.sendMessage(plugin.getConfigManager().getMessage("reload.success"));
+            messagesToSend.add(plugin.getConfigManager().getMessage("reload.success"));
         } catch (Exception e) {
             plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error during plugin reload triggered by /discord reload command", e);
-            sender.sendMessage(plugin.getConfigManager().getMessage("reload.failure"));
+            messagesToSend.add(plugin.getConfigManager().getMessage("reload.failure"));
         }
+
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            for (String message : messagesToSend) {
+                sender.sendMessage(message);
+            }
+        });
     }
 
     @Override

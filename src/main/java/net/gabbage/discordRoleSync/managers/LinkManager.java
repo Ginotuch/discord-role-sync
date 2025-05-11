@@ -53,8 +53,8 @@ public class LinkManager {
 
         linkedPlayersManager.addLink(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
         pendingRequests.remove(minecraftPlayerUUID);
-        // TODO: Trigger initial role sync here
-        plugin.getLogger().info("Player " + minecraftPlayerUUID + " successfully linked with Discord user " + request.getFullDiscordName() + " (" + request.getDiscordUserId() + ").");
+        plugin.getRoleSyncService().synchronizeRoles(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
+        plugin.getLogger().info("Player " + minecraftPlayerUUID + " successfully linked with Discord user " + request.getFullDiscordName() + " (" + request.getDiscordUserId() + "). Initial role sync triggered.");
         return true;
     }
 
@@ -75,8 +75,7 @@ public class LinkManager {
             String discordId = linkedPlayersManager.getDiscordId(playerUUID);
             linkedPlayersManager.removeLinkByMcUUID(playerUUID);
             plugin.getLogger().info("Player " + player.getName() + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ".");
-            // Optionally, attempt to remove roles from Discord/Ingame after unlinking
-            // plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId);
+            plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId);
             return true;
         }
         return false;

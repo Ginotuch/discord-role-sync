@@ -23,7 +23,8 @@ public class ConfigManager {
 
     public void loadMainConfig() {
         plugin.saveDefaultConfig(); // Saves config.yml if not present
-        mainConfig = plugin.getConfig(); // Loads config.yml from disk
+        plugin.reloadConfig(); // Force Bukkit to reload the config.yml from disk
+        mainConfig = plugin.getConfig(); // Now this gets the reloaded config
 
         // Ensure defaults are applied for main config (though less critical now for messages)
         InputStream mainDefaultConfigStream = plugin.getResource("config.yml");

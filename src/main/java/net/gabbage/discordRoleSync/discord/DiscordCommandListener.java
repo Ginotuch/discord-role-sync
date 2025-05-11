@@ -112,8 +112,8 @@ public class DiscordCommandListener extends ListenerAdapter {
             String denyClickableText = "[DENY]";
 
             // Find the colored versions in the message string
-            String herePattern = ChatColor.YELLOW + hereClickableText; // &e[HERE]
-            String linkCommandPattern = ChatColor.YELLOW + linkCommandText; // &e/link CODE
+            String herePattern = ChatColor.GREEN + hereClickableText; // &a[HERE]
+            String linkCommandPattern = ChatColor.GREEN + linkCommandText; // &a/link CODE
             String denyPattern = ChatColor.RED + denyClickableText;   // &c[DENY]
 
             int hereStartIndex = ingameMessage.indexOf(herePattern);
@@ -137,7 +137,7 @@ public class DiscordCommandListener extends ListenerAdapter {
 
                 // Part 2: [HERE]
                 TextComponent hereComp = new TextComponent(hereClickableText);
-                hereComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                hereComp.setColor(net.md_5.bungee.api.ChatColor.GREEN);
                 hereComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
                 components.add(hereComp);
                 currentPos += herePattern.length();
@@ -148,7 +148,7 @@ public class DiscordCommandListener extends ListenerAdapter {
 
                 // Part 4: /link CODE
                 TextComponent linkCmdComp = new TextComponent(linkCommandText); // Display the actual command text
-                linkCmdComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                linkCmdComp.setColor(net.md_5.bungee.api.ChatColor.GREEN);
                 linkCmdComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
                 components.add(linkCmdComp);
                 currentPos += linkCommandPattern.length();
@@ -176,7 +176,7 @@ public class DiscordCommandListener extends ListenerAdapter {
 
                 TextComponent part1Component = new TextComponent(TextComponent.fromLegacyText(part1Str));
                 TextComponent clickableComponent = new TextComponent(hereClickableText);
-                clickableComponent.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                clickableComponent.setColor(net.md_5.bungee.api.ChatColor.GREEN);
                 clickableComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
                 TextComponent part2Component = new TextComponent(TextComponent.fromLegacyText(part2Str));
 

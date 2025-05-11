@@ -14,23 +14,23 @@ _messages_version_do_not_overwrite: false
 # %link_code% - The unique code for the /link command
 messages:
   link:
-    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Click &e[HERE]&a or type &e/link %link_code%&a to link, or click &c[DENY]&a to reject."
+    request_received_ingame: "&5[DISCORD] &r&7Request received to link to &e%discord_user_displayname% &7(&e%discord_user_tag%&7). Click &a[HERE]&7 or type &a/link %link_code%&7 to link, or click &c[DENY]&7 to reject."
     request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link %link_code%&r in-game to confirm (the code will be shown to them)."
-    no_pending_request_ingame: "&cYou have no pending link requests. Please go to our Discord server and use the /link command with your Minecraft username (%your_mc_username%) to start the linking process."
+    no_pending_request_ingame: "&5[DISCORD] &r&7You have no pending link requests. Please go to our Discord server and use the /link command with your Minecraft username (&e%your_mc_username%&7) to start the linking process."
     link_code_missing_ingame: "&cPlease provide the link code. Usage: /link <CODE>"
     link_code_invalid_ingame: "&cThe link code you provided is invalid or has expired. Please try again or request a new link."
     already_linked_ingame: "&cYour Minecraft account is already linked to a Discord account."
     already_linked_discord_self: "&cYour Discord account is already linked to a Minecraft account."
     already_linked_discord_other_mc: "&cThe Minecraft account &e%mc_username%&c is already linked to another Discord account."
     already_linked_discord_other_discord: "&cYour Discord account is already linked to the Minecraft account &e%mc_username%&c."
-    success_ingame: "&aYour Minecraft account has been successfully linked with Discord account &e%discord_user_tag%&a!"
+    success_ingame: "&5[DISCORD] &r&aYour Minecraft account has been successfully linked with Discord account &e%discord_user_tag%&a!"
     success_discord: "&aYour Discord account has been successfully linked with Minecraft account &e%mc_username%&a!"
     player_not_online_discord: "&cPlayer &e%mc_username%&c is not currently online."
     error_discord: "&cAn error occurred while trying to send a link request. Please try again later." # This one was in config.yml but not used by DiscordCommandListener, keeping for completeness
-    request_expired_ingame: "&cYour pending link request has expired. Please ask the Discord user to send a new one."
+    request_expired_ingame: "&5[DISCORD] &r&7Your pending link request has expired. Please ask the Discord user to send a new one."
   unlink:
-    not_linked_ingame: "&cYour Minecraft account is not linked to any Discord account."
-    success_ingame: "&aYour Minecraft account has been successfully unlinked."
+    not_linked_ingame: "&5[DISCORD] &r&7Your Minecraft account is not linked to any Discord account."
+    success_ingame: "&5[DISCORD] &r&aYour Minecraft account has been successfully unlinked."
     error_ingame: "&cAn error occurred while trying to unlink your account."
     # Messages for Discord /unlink command
     not_linked_discord: "&cYour Discord account is not linked to any Minecraft account."
@@ -38,9 +38,9 @@ messages:
     error_discord: "&cAn error occurred while trying to unlink your account from Discord."
   reload:
     no_permission: "&cYou do not have permission to reload this plugin."
-    success: "&aDiscordRoleSync plugin has been successfully reloaded."
+    success: "&5[DISCORD] &r&aDiscordRoleSync plugin has been successfully reloaded."
     failure: "&cAn error occurred while reloading DiscordRoleSync. Check console for details."
   denylink:
-    success_ingame: "&aYou have successfully denied the link request from &e%discord_user_tag%&a."
-    no_pending_request_ingame: "&cYou have no pending link request to deny."
+    success_ingame: "&5[DISCORD] &r&aYou have successfully denied the link request from &e%discord_user_tag%&a."
+    no_pending_request_ingame: "&5[DISCORD] &r&7You have no pending link request to deny."
     request_denied_discord: "Your link request to Minecraft player &e%mc_username%&r has been denied."

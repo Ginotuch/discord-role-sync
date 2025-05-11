@@ -1,5 +1,5 @@
 # Message file version. Used by the plugin to determine if it should auto-update.
-_messages_version: 1
+_messages_version: 2
 
 # Set to true to prevent the plugin from automatically updating this file
 # if a new version with new default messages is released.
@@ -36,3 +36,7 @@ messages:
     not_linked_discord: "&cYour Discord account is not linked to any Minecraft account."
     success_discord: "&aYour Discord account has been successfully unlinked from the Minecraft account &e%mc_username%&a."
     error_discord: "&cAn error occurred while trying to unlink your account from Discord."
+  reload:
+    no_permission: "&cYou do not have permission to reload this plugin."
+    success: "&aDiscordRoleSync plugin has been successfully reloaded."
+    failure: "&cAn error occurred while reloading DiscordRoleSync. Check console for details."

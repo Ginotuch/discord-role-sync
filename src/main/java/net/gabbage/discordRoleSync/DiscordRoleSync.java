@@ -32,7 +32,11 @@ public final class DiscordRoleSync extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        initializePluginLogic();
+        getLogger().info("DiscordRoleSync has been enabled!");
+    }
 
+    private void initializePluginLogic() {
         // Initialize Configuration Manager
         configManager = new ConfigManager(this);
         configManager.loadMainConfig(); // Load main config.yml
@@ -47,12 +51,12 @@ public final class DiscordRoleSync extends JavaPlugin {
         // Setup Vault FIRST
         if (!setupPermissions()) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found or Vault failed to hook!", getDescription().getName()));
-            getServer().getPluginManager().disablePlugin(this);
+            getServer().getPluginManager().disablePlugin(this); // This will trigger onDisable and its shutdown logic
             return;
         }
 
         // Initialize Role Sync Service AFTER Vault is confirmed to be setup
-        roleSyncService = new RoleSyncService(this); 
+        roleSyncService = new RoleSyncService(this);
 
         // Initialize Discord Manager and connect the bot
         discordManager = new DiscordManager(this);
@@ -63,12 +67,12 @@ public final class DiscordRoleSync extends JavaPlugin {
             roleSyncService.loadAndParseRoleMappings();
         } else {
             getLogger().severe("JDA connection failed. Role mappings will be empty and synchronization might not work as expected.");
-            // RoleSyncService will still operate with an empty parsedMappings list, which is safe.
         }
 
         // Register Commands
         getCommand("link").setExecutor(new LinkCommand(this));
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
+        getCommand("drsreload").setExecutor(new commands.ReloadCommand(this)); // Register new command
 
         // Register Event Listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
@@ -79,11 +83,8 @@ public final class DiscordRoleSync extends JavaPlugin {
             periodicSyncTask = new PeriodicSyncTask(this).runTaskTimerAsynchronously(this, 20L * 60, syncIntervalTicks); // Initial delay 1 minute, then repeat
             getLogger().info("Periodic role synchronization task scheduled to run every " + configManager.getSyncInterval() + " minutes.");
         } else {
-            getLogger().warning("Periodic sync interval is 0 or negative. Task will not be scheduled.");
+            getLogger().info("Periodic sync interval is 0 or negative. Task will not be scheduled."); // Changed to info from warning
         }
-
-
-        getLogger().info("DiscordRoleSync has been enabled!");
     }
 
     private boolean setupPermissions() {
@@ -108,15 +109,41 @@ public final class DiscordRoleSync extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        shutdownPluginLogic();
+        getLogger().info("DiscordRoleSync has been disabled!");
+    }
+
+    private void shutdownPluginLogic() {
+        getLogger().info("Shutting down DiscordRoleSync services...");
+        // Cancel Periodic Sync Task
         if (periodicSyncTask != null && !periodicSyncTask.isCancelled()) {
             periodicSyncTask.cancel();
             getLogger().info("Periodic role synchronization task cancelled.");
         }
+        periodicSyncTask = null; // Clear the reference
+
+        // Disconnect Discord Bot
         if (discordManager != null) {
             discordManager.disconnect();
         }
-        getLogger().info("DiscordRoleSync has been disabled!");
+        discordManager = null; // Clear the reference
+
+        // Clear other manager/service references if they hold significant resources
+        // or to prevent issues if plugin is partially re-enabled without full lifecycle
+        roleSyncService = null;
+        linkManager = null;
+        linkedPlayersManager = null;
+        configManager = null;
+        // vaultPermissions is static and managed by Vault, usually no need to null it here
+        // instance is nulled if Bukkit fully disables, but for reload, it remains.
+        getLogger().info("DiscordRoleSync services shut down.");
+    }
+
+    public void reloadPlugin() {
+        getLogger().info("Reloading DiscordRoleSync...");
+        shutdownPluginLogic(); // Gracefully shut down current operations
+        initializePluginLogic(); // Re-initialize everything
+        getLogger().info("DiscordRoleSync reloaded successfully.");
     }
 
     public static DiscordRoleSync getInstance() {

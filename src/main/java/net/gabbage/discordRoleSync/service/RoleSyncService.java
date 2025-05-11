@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
+import net.gabbage.discordRoleSync.managers.DiscordManager;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;

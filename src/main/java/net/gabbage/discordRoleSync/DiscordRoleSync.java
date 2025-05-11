@@ -3,7 +3,6 @@ package net.gabbage.discordRoleSync;
 import net.gabbage.discordRoleSync.commands.DenyLinkCommand;
 import net.gabbage.discordRoleSync.commands.DiscordCommand; // Import DiscordCommand
 import net.gabbage.discordRoleSync.commands.LinkCommand;
-import net.gabbage.discordRoleSync.commands.ReloadCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
@@ -80,7 +79,6 @@ public final class DiscordRoleSync extends JavaPlugin {
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
         getCommand("denylink").setExecutor(new DenyLinkCommand(this));
         getCommand("discord").setExecutor(new DiscordCommand(this)); // DiscordCommand now handles its own subcommands
-        // getCommand("drsreload").setExecutor(new ReloadCommand(this)); // Removed old reload command registration
 
         // Register Event Listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);

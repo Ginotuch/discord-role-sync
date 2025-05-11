@@ -2,6 +2,7 @@ package net.gabbage.discordRoleSync.commands.discord;
 
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
+import net.gabbage.discordRoleSync.managers.DiscordManager; // Added import
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -75,7 +76,29 @@ public class StatusSubCommand implements IDiscordSubCommand {
         player.sendMessage(configManager.getMessage("discord_command.status_header"));
         if (isLinked) {
             String discordId = linkedPlayersManager.getDiscordId(player.getUniqueId());
-            player.sendMessage(configManager.getMessage("discord_command.status_linked_line", "%discord_user_id%", discordId));
+            DiscordManager discordManager = plugin.getDiscordManager();
+
+            if (discordManager != null && discordManager.getJda() != null) {
+                discordManager.getJda().retrieveUserById(discordId).queue(
+                    (net.dv8tion.jda.api.entities.User discordUser) -> { // Explicit type for clarity
+                        player.sendMessage(configManager.getMessage("discord_command.status_linked_line",
+                                "%discord_user_tag%", discordUser.getAsTag(),
+                                "%discord_user_id%", discordId
+                        ));
+                    },
+                    (Throwable failure) -> {
+                        plugin.getLogger().warning("Failed to retrieve Discord user " + discordId + " for /discord status: " + failure.getMessage());
+                        player.sendMessage(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
+                                "%discord_user_id%", discordId
+                        ));
+                    }
+                );
+            } else {
+                // JDA not available, just show the ID with error message
+                player.sendMessage(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
+                        "%discord_user_id%", discordId
+                ));
+            }
         } else {
             player.sendMessage(configManager.getMessage("discord_command.status_not_linked_line"));
         }

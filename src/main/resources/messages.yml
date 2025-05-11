@@ -1,5 +1,5 @@
 # Message file version. Used by the plugin to determine if it should auto-update.
-_messages_version: 5
+_messages_version: 6
 
 # Set to true to prevent the plugin from automatically updating this file
 # if a new version with new default messages is released.
@@ -51,7 +51,8 @@ messages:
     invite_line: "&7Invite link: %discord_invite_link_component%"
     no_invite_configured: "&7Our Discord invite link is not configured yet."
     status_header: "&7Link Status:"
-    status_linked_line: "  &aLinked &7to Discord User ID: &e%discord_user_id%"
+    status_linked_line: "  &aLinked &7to Discord: &e%discord_user_tag% &7(ID: &e%discord_user_id%&7)"
+    status_linked_error_retrieving_discord_user: "  &aLinked &7to Discord ID: &e%discord_user_id% &7(Could not retrieve Discord username)."
     status_not_linked_line: "  &cNot Linked"
     action_header: "&7Available Actions:"
     action_linked_line: "  &7To unlink your account, type &a/unlink" # This will be made clickable

@@ -11,8 +11,11 @@ import net.gabbage.discordRoleSync.managers.LinkManager;
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import net.gabbage.discordRoleSync.util.LinkRequest;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
 
 import java.util.UUID;
 
@@ -91,8 +94,34 @@ public class DiscordCommandListener extends ListenerAdapter {
         );
         // Run on Bukkit's main thread to interact with player
         plugin.getServer().getScheduler().runTask(plugin, () -> {
-            targetPlayer.sendMessage(ingameMessage);
-            // TODO: Implement clickable message here
+            String textToMakeClickable = "[HERE]";
+            // The config message uses "&e[HERE]", so we search for its translated version
+            String translatedClickableTextWithColor = ChatColor.YELLOW + textToMakeClickable;
+
+            int clickableStartIndex = ingameMessage.indexOf(translatedClickableTextWithColor);
+
+            if (clickableStartIndex != -1) {
+                String part1Str = ingameMessage.substring(0, clickableStartIndex);
+                // The part after "[HERE]" starts immediately after the colored "[HERE]" text.
+                // For example, if message is "... click §e[HERE]§a to ...", part2Str should be "§a to ..."
+                String part2Str = ingameMessage.substring(clickableStartIndex + translatedClickableTextWithColor.length());
+
+                TextComponent part1Component = new TextComponent(TextComponent.fromLegacyText(part1Str));
+                
+                TextComponent clickableComponent = new TextComponent(textToMakeClickable);
+                clickableComponent.setColor(net.md_5.bungee.api.ChatColor.YELLOW); // Set color for [HERE]
+                clickableComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link"));
+                // Optionally, add a hover event:
+                // clickableComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[]{new TextComponent("Click to confirm link")}));
+
+                TextComponent part2Component = new TextComponent(TextComponent.fromLegacyText(part2Str));
+
+                targetPlayer.spigot().sendMessage(part1Component, clickableComponent, part2Component);
+            } else {
+                // Fallback if the specific "[HERE]" text isn't found
+                targetPlayer.sendMessage(ingameMessage);
+                plugin.getLogger().info("Sent plain link request message to " + targetPlayer.getName() + " as clickable pattern was not found in: " + ingameMessage);
+            }
         });
 
         event.reply(configManager.getMessage("link.request_sent_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();

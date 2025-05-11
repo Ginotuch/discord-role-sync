@@ -60,13 +60,13 @@ public class DiscordCommandListener extends ListenerAdapter {
             UUID linkedMcUUID = linkedPlayersManager.getMcUUID(discordUser.getId());
             Player linkedPlayer = Bukkit.getPlayer(linkedMcUUID);
             String linkedMcName = linkedPlayer != null ? linkedPlayer.getName() : "another Minecraft account"; // Fallback if player not online / data not available
-            event.reply(configManager.getMessage("link.already_linked_discord_other_discord", "%mc_username%", linkedMcName)).setEphemeral(true).queue();
+            event.reply(configManager.getDiscordMessage("link.already_linked_discord_other_discord", "%mc_username%", linkedMcName)).setEphemeral(true).queue();
             return;
         }
 
         Player targetPlayer = Bukkit.getPlayerExact(minecraftUsername);
         if (targetPlayer == null || !targetPlayer.isOnline()) {
-            event.reply(configManager.getMessage("link.player_not_online_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
+            event.reply(configManager.getDiscordMessage("link.player_not_online_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
             return;
         }
 
@@ -76,7 +76,7 @@ public class DiscordCommandListener extends ListenerAdapter {
         if (linkedPlayersManager.isMcAccountLinked(targetMinecraftUUID)) {
             String linkedDiscordId = linkedPlayersManager.getDiscordId(targetMinecraftUUID);
             if (!linkedDiscordId.equals(discordUser.getId())) { // Should always be true due to the first check, but good for safety
-                event.reply(configManager.getMessage("link.already_linked_discord_other_mc", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
+                event.reply(configManager.getDiscordMessage("link.already_linked_discord_other_mc", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
                 return;
             }
         }
@@ -130,14 +130,14 @@ public class DiscordCommandListener extends ListenerAdapter {
             }
         });
 
-        event.reply(configManager.getMessage("link.request_sent_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
+        event.reply(configManager.getDiscordMessage("link.request_sent_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
     }
 
     private void handleUnlinkCommand(@NotNull SlashCommandInteractionEvent event, User discordUser) {
         String discordUserId = discordUser.getId();
 
         if (!linkedPlayersManager.isDiscordAccountLinked(discordUserId)) {
-            event.reply(configManager.getMessage("unlink.not_linked_discord")).setEphemeral(true).queue();
+            event.reply(configManager.getDiscordMessage("unlink.not_linked_discord")).setEphemeral(true).queue();
             return;
         }
 
@@ -158,7 +158,7 @@ public class DiscordCommandListener extends ListenerAdapter {
             plugin.getRoleSyncService().clearRolesOnUnlink(mcUUID, discordUserId);
 
             plugin.getLogger().info("Discord user " + discordUser.getAsTag() + " (ID: " + discordUserId + ") unlinked from Minecraft account " + mcUsername + " (UUID: " + mcUUID + ") via Discord command.");
-            event.reply(configManager.getMessage("unlink.success_discord", "%mc_username%", mcUsername)).setEphemeral(true).queue();
+            event.reply(configManager.getDiscordMessage("unlink.success_discord", "%mc_username%", mcUsername)).setEphemeral(true).queue();
 
             // Optionally, notify the Minecraft player if they are online
             Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
@@ -169,7 +169,7 @@ public class DiscordCommandListener extends ListenerAdapter {
 
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Error during Discord /unlink command for user " + discordUser.getAsTag(), e);
-            event.reply(configManager.getMessage("unlink.error_discord")).setEphemeral(true).queue();
+            event.reply(configManager.getDiscordMessage("unlink.error_discord")).setEphemeral(true).queue();
         }
     }
 }

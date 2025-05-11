@@ -71,4 +71,16 @@ public class ConfigManager {
         }
         return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
     }
+
+    public String getDiscordMessage(String key, String... replacements) {
+        String message = config.getString("messages." + key, "Message not found: " + key); // Get raw message
+        if (message == null) return "Message not found: messages." + key;
+        for (int i = 0; i < replacements.length; i += 2) {
+            if (i + 1 < replacements.length) {
+                message = message.replace(replacements[i], replacements[i+1]);
+            }
+        }
+        // First translate & codes to §, then strip all § color codes for Discord
+        return org.bukkit.ChatColor.stripColor(org.bukkit.ChatColor.translateAlternateColorCodes('&', message));
+    }
 }

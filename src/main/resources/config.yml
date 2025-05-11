@@ -3,6 +3,9 @@ discord:
   bot-token: "YOUR_BOT_TOKEN_HERE"
   # Optional: Your Discord Server/Guild ID. If set, slash commands are registered to this guild instantly.
   # If left empty, commands are registered globally (can take up to an hour to appear).
+  # If you provide a Guild ID, ensure it is correct and your bot is a member of that guild.
+  # An invalid or inaccessible Guild ID (like "1370985075235356722" if that was the ID you were trying to use)
+  # will cause warnings (e.g., "Could not find Discord guild with ID") and prevent guild-specific features from working correctly.
   guild-id: ""
 
 # Synchronization Settings

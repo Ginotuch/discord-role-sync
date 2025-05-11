@@ -22,6 +22,17 @@ linking:
   # Set Discord nickname to Minecraft username upon linking, and remove it on unlinking.
   # The bot needs the "Manage Nicknames" permission in Discord for this to work.
   synchronize-discord-nickname: true
+  # Default Role Assignment: Assign a specific in-game group to players when they link,
+  # but only if their current primary group is one of the specified 'if-in-groups'.
+  default-role-assignment:
+    enabled: false # Set to true to enable this feature
+    # If the player's primary group is one of these, the 'assign-group' will be given.
+    # Use lowercase group names.
+    if-in-groups:
+      - "default"
+      - "guest"
+    # The in-game group to assign if the conditions are met.
+    assign-group: "verified"
 
 # Role Synchronization Rules
 roles:

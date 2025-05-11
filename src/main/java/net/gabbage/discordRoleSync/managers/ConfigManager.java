@@ -114,6 +114,18 @@ public class ConfigManager {
         return mainConfig.getBoolean("linking.synchronize-discord-nickname", true);
     }
 
+    public boolean isDefaultRoleAssignmentEnabled() {
+        return mainConfig.getBoolean("linking.default-role-assignment.enabled", false);
+    }
+
+    public java.util.List<String> getDefaultRoleAssignmentIfInGroups() {
+        return mainConfig.getStringList("linking.default-role-assignment.if-in-groups");
+    }
+
+    public String getDefaultRoleAssignmentAssignGroup() {
+        return mainConfig.getString("linking.default-role-assignment.assign-group", "");
+    }
+
     public String getMessage(String key, String... replacements) {
         // Ensure messagesConfig is loaded, fallback to a default error message if not.
         if (messagesConfig == null) {

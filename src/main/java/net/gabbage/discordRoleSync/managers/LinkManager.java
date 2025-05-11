@@ -55,6 +55,11 @@ public class LinkManager {
         linkedPlayersManager.addLink(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
         pendingRequests.remove(minecraftPlayerUUID);
 
+        // Assign default role if configured and conditions met
+        if (plugin.getConfigManager().isDefaultRoleAssignmentEnabled()) {
+            assignDefaultRoleIfNeeded(request.getMinecraftPlayerUUID());
+        }
+
         // Set Discord Nickname if feature is enabled
         if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
             final String discordUserId = request.getDiscordUserId(); // Effectively final for lambda
@@ -108,5 +113,49 @@ public class LinkManager {
             return true;
         }
         return false;
+    }
+
+    private void assignDefaultRoleIfNeeded(UUID minecraftPlayerUUID) {
+        OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(minecraftPlayerUUID);
+        if (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline()) {
+            plugin.getLogger().warning("Cannot assign default role to " + minecraftPlayerUUID + ": Player data not found.");
+            return;
+        }
+
+        net.milkbowl.vault.permission.Permission vaultPerms = DiscordRoleSync.getVaultPermissions();
+        if (vaultPerms == null) {
+            plugin.getLogger().severe("Vault permissions not available. Cannot assign default role for " + offlinePlayer.getName());
+            return;
+        }
+
+        String primaryGroup = vaultPerms.getPrimaryGroup(null, offlinePlayer); // null for world means global/default context
+        java.util.List<String> triggerGroups = plugin.getConfigManager().getDefaultRoleAssignmentIfInGroups()
+                                                     .stream().map(String::toLowerCase).collect(java.util.stream.Collectors.toList());
+        String groupToAssign = plugin.getConfigManager().getDefaultRoleAssignmentAssignGroup();
+
+        if (groupToAssign.isEmpty()) {
+            plugin.getLogger().warning("Default role assignment is enabled, but 'assign-group' is not configured.");
+            return;
+        }
+
+        boolean shouldAssign = false;
+        if (primaryGroup == null) { // Player has no primary group
+            shouldAssign = true;
+            plugin.getLogger().info("Player " + offlinePlayer.getName() + " has no primary group. Attempting to assign default role: " + groupToAssign);
+        } else if (triggerGroups.contains(primaryGroup.toLowerCase())) {
+            shouldAssign = true;
+            plugin.getLogger().info("Player " + offlinePlayer.getName() + "'s primary group (" + primaryGroup + ") is in the default assignment trigger list. Attempting to assign role: " + groupToAssign);
+        }
+
+        if (shouldAssign) {
+            // Ensure Vault operations are on the main thread
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (vaultPerms.playerAddGroup(null, offlinePlayer, groupToAssign)) {
+                    plugin.getLogger().info("Successfully assigned default group '" + groupToAssign + "' to " + offlinePlayer.getName() + " on link.");
+                } else {
+                    plugin.getLogger().warning("Failed to assign default group '" + groupToAssign + "' to " + offlinePlayer.getName() + " on link. Check Vault-compatible permissions plugin logs.");
+                }
+            });
+        }
     }
 }

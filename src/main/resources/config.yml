@@ -1,0 +1,55 @@
+# Discord Bot Configuration
+discord:
+  bot-token: "YOUR_BOT_TOKEN_HERE"
+  # Optional: Your Discord Server/Guild ID. If set, slash commands are registered to this guild instantly.
+  # If left empty, commands are registered globally (can take up to an hour to appear).
+  guild-id: ""
+
+# Synchronization Settings
+sync:
+  # Interval in minutes for periodic role synchronization. Set to 0 to disable.
+  interval-minutes: 5
+
+# Linking Process Settings
+linking:
+  # How long in minutes a link request from Discord to Minecraft remains valid.
+  request-timeout-minutes: 5
+
+# Role Synchronization Rules
+roles:
+  # Sync direction:
+  # INGAME_TO_DISCORD: Changes in Minecraft groups update Discord roles.
+  # DISCORD_TO_INGAME: Changes in Discord roles update Minecraft groups.
+  # BOTH: Synchronization occurs in both directions. (Ingame -> Discord, then Discord -> Ingame)
+  sync-direction: "BOTH"
+  # Role Mappings: Define which in-game groups correspond to which Discord roles.
+  # Format: - "ingame_group_name:discord_role_id"
+  # Example:
+  # - "admin:123456789012345678"
+  # - "moderator:098765432109876543"
+  mappings: []
+
+# Messages - Customize messages sent to players. Use '&' for color codes.
+# Placeholders:
+# %discord_user_displayname% - Discord user's display name (global name if available, otherwise username)
+# %discord_user_tag% - Discord user's tag (e.g., Username#1234 or just Username if new system)
+# %mc_username% - Minecraft player's username
+# %your_mc_username% - The Minecraft username of the player receiving the message (used in contexts where they need to provide it)
+messages:
+  link:
+    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Type &e/link&a or click &e[HERE]&a to link accounts."
+    request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link&r in-game to confirm."
+    no_pending_request_ingame: "&cYou have no pending link requests. Ask a Discord user to use /link %your_mc_username% in the Discord server."
+    already_linked_ingame: "&cYour Minecraft account is already linked to a Discord account."
+    already_linked_discord_self: "&cYour Discord account is already linked to a Minecraft account."
+    already_linked_discord_other_mc: "&cThe Minecraft account &e%mc_username%&c is already linked to another Discord account."
+    already_linked_discord_other_discord: "&cYour Discord account is already linked to the Minecraft account &e%mc_username%&c."
+    success_ingame: "&aYour Minecraft account has been successfully linked with Discord account &e%discord_user_tag%&a!"
+    success_discord: "&aYour Discord account has been successfully linked with Minecraft account &e%mc_username%&a!"
+    player_not_online_discord: "&cPlayer &e%mc_username%&c is not currently online."
+    error_discord: "&cAn error occurred while trying to send a link request. Please try again later."
+    request_expired_ingame: "&cYour pending link request has expired. Please ask the Discord user to send a new one."
+  unlink:
+    not_linked_ingame: "&cYour Minecraft account is not linked to any Discord account."
+    success_ingame: "&aYour Minecraft account has been successfully unlinked."
+    error_ingame: "&cAn error occurred while trying to unlink your account."

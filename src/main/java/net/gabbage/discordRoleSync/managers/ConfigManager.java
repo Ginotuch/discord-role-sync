@@ -2,6 +2,10 @@ package net.gabbage.discordRoleSync.managers;
 
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class ConfigManager {
 
@@ -13,37 +17,24 @@ public class ConfigManager {
     }
 
     public void loadConfig() {
+        // This copies the config.yml from your resources to the plugin's data folder if it doesn't exist
         plugin.saveDefaultConfig();
+
+        // Load the configuration from disk
         config = plugin.getConfig();
-        // Add default values if they don't exist
-        config.addDefault("discord.bot-token", "YOUR_BOT_TOKEN_HERE");
-        config.addDefault("discord.guild-id", ""); // Optional: For guild-specific command registration
-        config.addDefault("sync.interval-minutes", 5);
-        config.addDefault("linking.request-timeout-minutes", 5);
-        config.addDefault("roles.sync-direction", "BOTH"); // Options: INGAME_TO_DISCORD, DISCORD_TO_INGAME, BOTH
-        config.addDefault("roles.mappings", new java.util.ArrayList<>()); // Example: - "ingamegroup:discordroleid"
 
-        // Messages
-        config.addDefault("messages.link.request_received_ingame", "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Type &e/link&a or click &e[HERE]&a to link accounts.");
-        config.addDefault("messages.link.request_sent_discord", "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link&r in-game to confirm.");
-        config.addDefault("messages.link.no_pending_request_ingame", "&cYou have no pending link requests. Ask a Discord user to use /link %your_mc_username% in the Discord server.");
-        config.addDefault("messages.link.already_linked_ingame", "&cYour Minecraft account is already linked to a Discord account.");
-        config.addDefault("messages.link.already_linked_discord_self", "&cYour Discord account is already linked to a Minecraft account.");
-        config.addDefault("messages.link.already_linked_discord_other_mc", "&cThe Minecraft account &e%mc_username%&c is already linked to another Discord account.");
-        config.addDefault("messages.link.already_linked_discord_other_discord", "&cYour Discord account is already linked to the Minecraft account &e%mc_username%&c.");
-        config.addDefault("messages.link.success_ingame", "&aYour Minecraft account has been successfully linked with Discord account &e%discord_user_tag%&a!");
-        config.addDefault("messages.link.success_discord", "&aYour Discord account has been successfully linked with Minecraft account &e%mc_username%&a!");
-        config.addDefault("messages.link.player_not_online_discord", "&cPlayer &e%mc_username%&c is not currently online.");
-        config.addDefault("messages.link.error_discord", "&cAn error occurred while trying to send a link request. Please try again later.");
-        config.addDefault("messages.link.request_expired_ingame", "&cYour pending link request has expired. Please ask the Discord user to send a new one.");
+        // Load the defaults from the JAR's config.yml to ensure copyDefaults works correctly
+        // for new keys added in future plugin updates.
+        InputStream defaultConfigStream = plugin.getResource("config.yml");
+        if (defaultConfigStream != null) {
+            YamlConfiguration defaultConfigValues = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream));
+            config.setDefaults(defaultConfigValues);
+        }
 
-        config.addDefault("messages.unlink.not_linked_ingame", "&cYour Minecraft account is not linked to any Discord account.");
-        config.addDefault("messages.unlink.success_ingame", "&aYour Minecraft account has been successfully unlinked.");
-        config.addDefault("messages.unlink.error_ingame", "&cAn error occurred while trying to unlink your account.");
-
-
+        // This will add any new default options from the JAR's config.yml to the user's existing config.yml
+        // without overwriting their existing settings.
         config.options().copyDefaults(true);
-        plugin.saveConfig();
+        plugin.saveConfig(); // Save the config if any new defaults were merged
     }
 
     public String getBotToken() {

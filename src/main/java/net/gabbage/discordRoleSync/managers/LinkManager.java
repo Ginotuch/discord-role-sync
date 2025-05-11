@@ -57,20 +57,22 @@ public class LinkManager {
 
         // Set Discord Nickname if feature is enabled
         if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
-            Player player = plugin.getServer().getPlayer(request.getMinecraftPlayerUUID());
-            if (player != null && player.isOnline()) { // Ensure player is online to get current name
-                plugin.getDiscordManager().setDiscordNickname(request.getDiscordUserId(), player.getName());
-            } else {
-                // If player is not online, we might need to fetch their last known name or skip.
-                // For now, we'll only set it if they are online during linking.
-                // Alternatively, store the name in LinkRequest or fetch from OfflinePlayer.
-                OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(request.getMinecraftPlayerUUID());
-                if (offlinePlayer.getName() != null) {
-                     plugin.getDiscordManager().setDiscordNickname(request.getDiscordUserId(), offlinePlayer.getName());
+            final String discordUserId = request.getDiscordUserId(); // Effectively final for lambda
+            final UUID minecraftPlayerUUID = request.getMinecraftPlayerUUID(); // Effectively final for lambda
+
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                Player player = plugin.getServer().getPlayer(minecraftPlayerUUID);
+                if (player != null && player.isOnline()) { // Ensure player is online to get current name
+                    plugin.getDiscordManager().setDiscordNickname(discordUserId, player.getName());
                 } else {
-                    plugin.getLogger().warning("Could not set Discord nickname for " + request.getDiscordUserId() + ": Minecraft player " + request.getMinecraftPlayerUUID() + " name not found.");
+                    OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(minecraftPlayerUUID);
+                    if (offlinePlayer.getName() != null) {
+                        plugin.getDiscordManager().setDiscordNickname(discordUserId, offlinePlayer.getName());
+                    } else {
+                        plugin.getLogger().warning("Could not set Discord nickname for " + discordUserId + ": Minecraft player " + minecraftPlayerUUID + " name not found (player offline and name not retrievable).");
+                    }
                 }
-            }
+            });
         }
 
         plugin.getRoleSyncService().synchronizeRoles(request.getMinecraftPlayerUUID(), request.getDiscordUserId());

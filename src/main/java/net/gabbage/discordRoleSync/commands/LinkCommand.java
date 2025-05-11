@@ -35,7 +35,7 @@ public class LinkCommand implements CommandExecutor {
 
             if (linkManager.confirmLink(player.getUniqueId())) {
                 player.sendMessage(configManager.getMessage("link.success_ingame", "%discord_user_tag%", request.getFullDiscordName()));
-                plugin.getDiscordManager().sendDirectMessage(request.getDiscordUserId(), configManager.getMessage("link.success_discord", "%mc_username%", player.getName()));
+                // plugin.getDiscordManager().sendDirectMessage(request.getDiscordUserId(), configManager.getMessage("link.success_discord", "%mc_username%", player.getName())); // Removed DM to Discord user
             } else {
                 // This case might occur if the request expired between hasPendingRequest and confirmLink, or other issues.
                 player.sendMessage(configManager.getMessage("link.no_pending_request_ingame", "%your_mc_username%", player.getName()));

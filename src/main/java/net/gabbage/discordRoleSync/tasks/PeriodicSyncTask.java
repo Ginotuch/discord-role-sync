@@ -22,11 +22,10 @@ public class PeriodicSyncTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        plugin.getLogger().fine("Starting periodic role synchronization task...");
         Map<UUID, String> allLinks = linkedPlayersManager.getAllLinks();
 
         if (allLinks.isEmpty()) {
-            plugin.getLogger().fine("No linked players found. Skipping periodic sync.");
+            // No linked players, so nothing to do. Silently return.
             return;
         }
 

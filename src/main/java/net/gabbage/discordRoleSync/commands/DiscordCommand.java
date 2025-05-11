@@ -1,157 +1,97 @@
 package net.gabbage.discordRoleSync.commands;
 
 import net.gabbage.discordRoleSync.DiscordRoleSync;
+import net.gabbage.discordRoleSync.commands.discord.IDiscordSubCommand;
+import net.gabbage.discordRoleSync.commands.discord.ReloadSubCommand;
+import net.gabbage.discordRoleSync.commands.discord.StatusSubCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
-import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.hover.content.Text;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DiscordCommand implements CommandExecutor, TabCompleter {
 
     private final DiscordRoleSync plugin;
+    private final Map<String, IDiscordSubCommand> subCommands;
+    private final IDiscordSubCommand defaultSubCommand;
 
     public DiscordCommand(DiscordRoleSync plugin) {
         this.plugin = plugin;
+        this.subCommands = new HashMap<>();
+        this.defaultSubCommand = new StatusSubCommand(); // Default action
+
+        // Register subcommands
+        registerSubCommand(new ReloadSubCommand());
+        registerSubCommand(this.defaultSubCommand); // Register status as a fallback/default
+    }
+
+    private void registerSubCommand(IDiscordSubCommand subCommand) {
+        subCommands.put(subCommand.getName().toLowerCase(), subCommand);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("This command can only be run by a player.");
-            return true;
-        }
-
-        Player player = (Player) sender;
         ConfigManager configManager = plugin.getConfigManager();
 
-        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-            handleReloadSubcommand(player, configManager);
-            return true;
-        }
+        if (args.length > 0) {
+            String subCommandName = args[0].toLowerCase();
+            IDiscordSubCommand subCommand = subCommands.get(subCommandName);
 
-        // Default behavior: show status/invite
-        if (!player.hasPermission("discordrolesync.discord")) {
-            player.sendMessage(configManager.getMessage("discord_command.no_permission"));
-            return true;
-        }
-
-        LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
-        boolean isLinked = linkedPlayersManager.isMcAccountLinked(player.getUniqueId());
-        String discordInviteLink = configManager.getDiscordInviteLink();
-
-        // Header
-        player.sendMessage(configManager.getMessage("discord_command.header"));
-
-        // Invite Link
-        if (discordInviteLink != null && !discordInviteLink.isEmpty() && !"https://discord.gg/yourinvitecode".equals(discordInviteLink)) {
-            // The "invite_line" from messages.yml is expected to contain "%discord_invite_link_component%"
-            // We will replace this placeholder with the actual clickable component.
-            String inviteLineTemplate = configManager.getMessage("discord_command.invite_line");
-
-            TextComponent inviteLinkComponent = new TextComponent(discordInviteLink); // The link itself is the text
-            inviteLinkComponent.setColor(net.md_5.bungee.api.ChatColor.GREEN);
-            inviteLinkComponent.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, discordInviteLink));
-            inviteLinkComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to join: " + discordInviteLink)));
-
-            // Manually construct the line with the clickable component
-            // This assumes the placeholder is at the end or can be simply appended.
-            // A more robust way would be to split the message if placeholder is in the middle.
-            // For "Invite link: %discord_invite_link_component%", we can split by the placeholder.
-            String placeholder = "%discord_invite_link_component%";
-            if (inviteLineTemplate.contains(placeholder)) {
-                String[] parts = inviteLineTemplate.split(java.util.regex.Pattern.quote(placeholder), 2);
-                TextComponent finalMessage = new TextComponent(TextComponent.fromLegacyText(parts[0])); // Text before placeholder
-                finalMessage.addExtra(inviteLinkComponent);
-                if (parts.length > 1) {
-                    finalMessage.addExtra(new TextComponent(TextComponent.fromLegacyText(parts[1]))); // Text after placeholder
+            if (subCommand != null) {
+                if (subCommand.getPermission() != null && !sender.hasPermission(subCommand.getPermission())) {
+                    sender.sendMessage(configManager.getMessage("discord_command.no_permission")); // Or a more generic no_perm message
+                    return true;
                 }
-                player.spigot().sendMessage(finalMessage);
-            } else {
-                // Fallback if placeholder is missing in the message string for some reason
-                TextComponent inviteMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "Invite link: "));
-                inviteMessage.addExtra(inviteLinkComponent);
-                player.spigot().sendMessage(inviteMessage);
+                // Remove the subcommand name from args before passing to execute
+                String[] subArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+                subCommand.execute(plugin, sender, subArgs);
+                return true;
             }
-        } else {
-            player.sendMessage(configManager.getMessage("discord_command.no_invite_configured"));
         }
 
-        player.sendMessage(" "); // Spacer
-
-        // Link Status
-        player.sendMessage(configManager.getMessage("discord_command.status_header"));
-        if (isLinked) {
-            String discordId = linkedPlayersManager.getDiscordId(player.getUniqueId());
-            player.sendMessage(configManager.getMessage("discord_command.status_linked_line", "%discord_user_id%", discordId));
-        } else {
-            player.sendMessage(configManager.getMessage("discord_command.status_not_linked_line"));
+        // Default action if no subcommand or invalid subcommand is given
+        if (defaultSubCommand.getPermission() != null && !sender.hasPermission(defaultSubCommand.getPermission())) {
+            sender.sendMessage(configManager.getMessage("discord_command.no_permission"));
+            return true;
         }
-
-        player.sendMessage(" "); // Spacer
-
-        // Next Steps
-        player.sendMessage(configManager.getMessage("discord_command.action_header"));
-        if (isLinked) {
-            TextComponent unlinkMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "  To unlink your account, type "));
-            TextComponent unlinkCommand = new TextComponent("/unlink");
-            unlinkCommand.setColor(net.md_5.bungee.api.ChatColor.GREEN);
-            unlinkCommand.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/unlink"));
-            unlinkCommand.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to type /unlink")));
-            unlinkMessage.addExtra(unlinkCommand);
-            player.spigot().sendMessage(unlinkMessage);
-        } else {
-            player.sendMessage(configManager.getMessage("discord_command.action_not_linked_line", "%your_mc_username%", player.getName()));
-        }
-
-        // Footer
-        player.sendMessage(configManager.getMessage("discord_command.footer"));
-
+        defaultSubCommand.execute(plugin, sender, new String[0]); // Default command takes no args
         return true;
-    }
-
-    private void handleReloadSubcommand(Player player, ConfigManager configManager) {
-        if (!player.hasPermission("discordrolesync.reload")) {
-            player.sendMessage(configManager.getMessage("reload.no_permission"));
-            return;
-        }
-
-        player.sendMessage(ChatColor.YELLOW + "Reloading DiscordRoleSync plugin...");
-        try {
-            plugin.reloadPlugin();
-            player.sendMessage(configManager.getMessage("reload.success"));
-        } catch (Exception e) {
-            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error during plugin reload triggered by /discord reload command", e);
-            player.sendMessage(configManager.getMessage("reload.failure"));
-        }
     }
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            List<String> subcommands = new ArrayList<>();
-            if (sender.hasPermission("discordrolesync.reload")) {
-                subcommands.add("reload");
+            // Suggest subcommands for which the player has permission
+            List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(args[0], subCommands.keySet().stream()
+                .filter(name -> !name.equals(defaultSubCommand.getName())) // Don't suggest "status" explicitly
+                .filter(name -> {
+                    IDiscordSubCommand sub = subCommands.get(name);
+                    return sub.getPermission() == null || sender.hasPermission(sub.getPermission());
+                })
+                .collect(Collectors.toList()), completions);
+            Collections.sort(completions);
+            return completions;
+        } else if (args.length > 1) {
+            // Delegate to the specific subcommand's tab completer
+            IDiscordSubCommand subCommand = subCommands.get(args[0].toLowerCase());
+            if (subCommand != null && (subCommand.getPermission() == null || sender.hasPermission(subCommand.getPermission()))) {
+                String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+                return subCommand.onTabComplete(plugin, sender, subArgs);
             }
-            // Add other subcommands here in the future if needed
-
-            return subcommands.stream()
-                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

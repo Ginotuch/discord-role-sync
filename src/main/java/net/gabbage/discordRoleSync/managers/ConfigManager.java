@@ -49,12 +49,8 @@ public class ConfigManager {
         return config.getInt("sync.interval-minutes", 5);
     }
 
-    public String getSyncDirection() {
-        return config.getString("roles.sync-direction", "BOTH");
-    }
-
-    public java.util.List<String> getRoleMappings() {
-        return config.getStringList("roles.mappings");
+    public java.util.List<java.util.Map<?, ?>> getRoleMappings() {
+        return config.getMapList("roles.mappings");
     }
 
     public int getLinkRequestTimeoutMinutes() {

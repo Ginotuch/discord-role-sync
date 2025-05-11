@@ -17,16 +17,21 @@ linking:
 
 # Role Synchronization Rules
 roles:
-  # Sync direction:
-  # INGAME_TO_DISCORD: Changes in Minecraft groups update Discord roles.
-  # DISCORD_TO_INGAME: Changes in Discord roles update Minecraft groups.
-  # BOTH: Synchronization occurs in both directions. (Ingame -> Discord, then Discord -> Ingame)
-  sync-direction: "BOTH"
-  # Role Mappings: Define which in-game groups correspond to which Discord roles.
-  # Format: - "ingame_group_name:discord_role_id"
+  # Role Mappings: Define which in-game groups correspond to which Discord roles, and their sync direction.
+  # Each mapping is an object with:
+  #   ingame: "ingame_group_name"
+  #   discord: "discord_role_id"
+  #   direction: "BOTH" | "INGAME_TO_DISCORD" | "DISCORD_TO_INGAME" (Default: "BOTH" if omitted)
+  #
   # Example:
-  # - "admin:123456789012345678"
-  # - "moderator:098765432109876543"
+  # - ingame: "admin"
+  #   discord: "123456789012345678"
+  #   direction: "BOTH"
+  # - ingame: "moderator"
+  #   discord: "098765432109876543"
+  #   direction: "INGAME_TO_DISCORD"
+  # - ingame: "vip"
+  #   discord: "112233445566778899" # Will default to "BOTH" if direction is missing
   mappings: []
 
 # Messages - Customize messages sent to players. Use '&' for color codes.

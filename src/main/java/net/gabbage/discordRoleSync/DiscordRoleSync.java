@@ -8,12 +8,19 @@ import net.gabbage.discordRoleSync.commands.LinkCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
+import net.gabbage.discordRoleSync.commands.LinkCommand;
+import net.gabbage.discordRoleSync.commands.UnlinkCommand;
+import net.gabbage.discordRoleSync.managers.ConfigManager;
+import net.gabbage.discordRoleSync.managers.DiscordManager;
 import net.gabbage.discordRoleSync.managers.LinkManager;
 import net.gabbage.discordRoleSync.service.RoleSyncService;
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
+import net.gabbage.discordRoleSync.tasks.PeriodicSyncTask; // Import the new task
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask; // Import BukkitTask
+
 import java.util.logging.Logger; // Import Logger
 
 public final class DiscordRoleSync extends JavaPlugin {
@@ -26,6 +33,7 @@ public final class DiscordRoleSync extends JavaPlugin {
     private RoleSyncService roleSyncService;
     private static Permission vaultPermissions = null; // Static Vault Permission object
     private static final Logger log = Logger.getLogger("Minecraft"); // Static logger for setup messages
+    private BukkitTask periodicSyncTask;
 
 
     @Override
@@ -64,6 +72,16 @@ public final class DiscordRoleSync extends JavaPlugin {
         getCommand("link").setExecutor(new LinkCommand(this));
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
 
+        // Schedule Periodic Sync Task
+        long syncIntervalTicks = configManager.getSyncInterval() * 60L * 20L; // interval in minutes to ticks
+        if (syncIntervalTicks > 0) {
+            periodicSyncTask = new PeriodicSyncTask(this).runTaskTimerAsynchronously(this, 20L * 60, syncIntervalTicks); // Initial delay 1 minute, then repeat
+            getLogger().info("Periodic role synchronization task scheduled to run every " + configManager.getSyncInterval() + " minutes.");
+        } else {
+            getLogger().warning("Periodic sync interval is 0 or negative. Task will not be scheduled.");
+        }
+
+
         getLogger().info("DiscordRoleSync has been enabled!");
     }
 
@@ -90,6 +108,10 @@ public final class DiscordRoleSync extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        if (periodicSyncTask != null && !periodicSyncTask.isCancelled()) {
+            periodicSyncTask.cancel();
+            getLogger().info("Periodic role synchronization task cancelled.");
+        }
         if (discordManager != null) {
             discordManager.disconnect();
         }

@@ -29,6 +29,8 @@ public class ConfigManager {
         if (defaultConfigStream != null) {
             YamlConfiguration defaultConfigValues = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream));
             config.setDefaults(defaultConfigValues);
+        } else {
+            plugin.getLogger().severe("Could not load default config.yml from JAR! Default values will be missing. This may cause 'Message not found' errors for new config options.");
         }
 
         // This will add any new default options from the JAR's config.yml to the user's existing config.yml

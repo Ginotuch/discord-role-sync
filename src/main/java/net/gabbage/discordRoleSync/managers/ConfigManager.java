@@ -33,8 +33,10 @@ public class ConfigManager {
         } else {
             plugin.getLogger().severe("Could not load default config.yml from JAR!");
         }
+        // Apply defaults in memory but do not save back to disk immediately.
+        // This prevents reformatting/comment loss in the user's config.yml unless it's the first time it's created.
         mainConfig.options().copyDefaults(true);
-        plugin.saveConfig();
+        // plugin.saveConfig(); // Removed this line
     }
 
     public void loadMessagesConfig() {

@@ -35,7 +35,7 @@ public class DiscordManager {
 
         try {
             jda = JDABuilder.createDefault(botToken)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES) // Removed MESSAGE_CONTENT, kept DIRECT_MESSAGES for DMs
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES) // Removed DIRECT_MESSAGES
                     .setMemberCachePolicy(MemberCachePolicy.ALL) // Cache all members for easier role management
                     .addEventListeners(new DiscordCommandListener(plugin)) // Register command listener
                     .build();
@@ -182,39 +182,12 @@ public class DiscordManager {
     }
 
     public void sendDirectMessage(String userId, String message) {
-        if (jda == null) {
-            plugin.getLogger().warning("Attempted to send DM while JDA is not initialized.");
-            return;
-        }
-        jda.retrieveUserById(userId).queue(
-            user -> user.openPrivateChannel().queue(
-                channel -> channel.sendMessage(message).queue(
-                    success -> plugin.getLogger().info("Successfully sent DM to " + user.getAsTag()),
-                    failure -> plugin.getLogger().warning("Failed to send DM to " + user.getAsTag() + ": " + failure.getMessage())
-                ),
-                failure -> plugin.getLogger().warning("Failed to open private channel with " + userId + ": " + failure.getMessage())
-            ),
-            failure -> plugin.getLogger().warning("Failed to retrieve user " + userId + " for DM: " + failure.getMessage())
-        );
+        // DM functionality has been removed as per user request.
+        // plugin.getLogger().fine("DM sending is disabled. Attempted to send DM to " + userId + " with message: " + message);
     }
 
     public void sendLinkDeniedDM(String userId, String minecraftUsername) {
-        if (jda == null) {
-            plugin.getLogger().warning("Attempted to send Link Denied DM while JDA is not initialized.");
-            return;
-        }
-        ConfigManager configManager = plugin.getConfigManager();
-        String message = configManager.getDiscordMessage("denylink.request_denied_discord", "%mc_username%", minecraftUsername);
-
-        jda.retrieveUserById(userId).queue(
-            user -> user.openPrivateChannel().queue(
-                channel -> channel.sendMessage(message).queue(
-                    success -> plugin.getLogger().info("Successfully sent Link Denied DM to " + user.getAsTag()),
-                    failure -> plugin.getLogger().warning("Failed to send Link Denied DM to " + user.getAsTag() + ": " + failure.getMessage())
-                ),
-                failure -> plugin.getLogger().warning("Failed to open private channel with " + userId + " for Link Denied DM: " + failure.getMessage())
-            ),
-            failure -> plugin.getLogger().warning("Failed to retrieve user " + userId + " for Link Denied DM: " + failure.getMessage())
-        );
+        // DM functionality has been removed as per user request.
+        // plugin.getLogger().fine("DM sending is disabled. Attempted to send Link Denied DM to " + userId + " regarding MC user: " + minecraftUsername);
     }
 }

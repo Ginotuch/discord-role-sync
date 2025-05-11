@@ -46,10 +46,10 @@ public class DenyLinkCommand implements CommandExecutor {
             linkManager.removePendingRequest(player.getUniqueId());
             player.sendMessage(configManager.getMessage("denylink.success_ingame", "%discord_user_tag%", request.getFullDiscordName()));
 
-            // Notify the Discord user
-            OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(request.getMinecraftPlayerUUID());
-            String mcUsername = offlinePlayer.getName() != null ? offlinePlayer.getName() : player.getName(); // Fallback to current player name if offline name not found
-            plugin.getDiscordManager().sendLinkDeniedDM(request.getDiscordUserId(), mcUsername);
+            // Notify the Discord user - DM functionality removed.
+            // OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(request.getMinecraftPlayerUUID());
+            // String mcUsername = offlinePlayer.getName() != null ? offlinePlayer.getName() : player.getName(); // Fallback to current player name if offline name not found
+            // plugin.getDiscordManager().sendLinkDeniedDM(request.getDiscordUserId(), mcUsername);
 
         } else {
             player.sendMessage(configManager.getMessage("denylink.no_pending_request_ingame"));

@@ -43,19 +43,21 @@ public final class DiscordRoleSync extends JavaPlugin {
         // Initialize Link Manager
         linkManager = new LinkManager(this, linkedPlayersManager);
 
-        // Initialize Role Sync Service
-        roleSyncService = new RoleSyncService(this); // Must be after setupPermissions
-
-        // Setup Vault
+        // Setup Vault FIRST
         if (!setupPermissions()) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found or Vault failed to hook!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        // Re-initialize RoleSyncService if Vault setup is successful and it depends on VaultPerms
-        // This ensures RoleSyncService gets the vaultPerms instance.
-        // Alternatively, pass vaultPerms to RoleSyncService constructor or have RoleSyncService fetch it statically.
-        // For simplicity with current structure, RoleSyncService constructor already fetches it statically.
+
+        // Initialize Role Sync Service AFTER Vault is confirmed to be setup
+        roleSyncService = new RoleSyncService(this); 
+
+        // The comment below is now obsolete as RoleSyncService is initialized after successful setupPermissions.
+        // // Re-initialize RoleSyncService if Vault setup is successful and it depends on VaultPerms
+        // // This ensures RoleSyncService gets the vaultPerms instance.
+        // // Alternatively, pass vaultPerms to RoleSyncService constructor or have RoleSyncService fetch it statically.
+        // // For simplicity with current structure, RoleSyncService constructor already fetches it statically.
 
         // Initialize Discord Manager and connect the bot
         discordManager = new DiscordManager(this);

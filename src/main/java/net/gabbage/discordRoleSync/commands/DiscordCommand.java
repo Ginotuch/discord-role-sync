@@ -46,12 +46,34 @@ public class DiscordCommand implements CommandExecutor {
 
         // Invite Link
         if (discordInviteLink != null && !discordInviteLink.isEmpty() && !"https://discord.gg/yourinvitecode".equals(discordInviteLink)) {
-            TextComponent inviteMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "Our Discord: "));
-            TextComponent linkText = new TextComponent(configManager.getMessage("discord_command.invite_link_text")); // Already colored by getMessage
-            linkText.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, discordInviteLink));
-            linkText.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to join our Discord!")));
-            inviteMessage.addExtra(linkText);
-            player.spigot().sendMessage(inviteMessage);
+            // The "invite_line" from messages.yml is expected to contain "%discord_invite_link_component%"
+            // We will replace this placeholder with the actual clickable component.
+            String inviteLineTemplate = configManager.getMessage("discord_command.invite_line");
+
+            TextComponent inviteLinkComponent = new TextComponent(discordInviteLink); // The link itself is the text
+            inviteLinkComponent.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+            inviteLinkComponent.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, discordInviteLink));
+            inviteLinkComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to join: " + discordInviteLink)));
+
+            // Manually construct the line with the clickable component
+            // This assumes the placeholder is at the end or can be simply appended.
+            // A more robust way would be to split the message if placeholder is in the middle.
+            // For "Invite link: %discord_invite_link_component%", we can split by the placeholder.
+            String placeholder = "%discord_invite_link_component%";
+            if (inviteLineTemplate.contains(placeholder)) {
+                String[] parts = inviteLineTemplate.split(java.util.regex.Pattern.quote(placeholder), 2);
+                TextComponent finalMessage = new TextComponent(TextComponent.fromLegacyText(parts[0])); // Text before placeholder
+                finalMessage.addExtra(inviteLinkComponent);
+                if (parts.length > 1) {
+                    finalMessage.addExtra(new TextComponent(TextComponent.fromLegacyText(parts[1]))); // Text after placeholder
+                }
+                player.spigot().sendMessage(finalMessage);
+            } else {
+                // Fallback if placeholder is missing in the message string for some reason
+                TextComponent inviteMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "Invite link: "));
+                inviteMessage.addExtra(inviteLinkComponent);
+                player.spigot().sendMessage(inviteMessage);
+            }
         } else {
             player.sendMessage(configManager.getMessage("discord_command.no_invite_configured"));
         }

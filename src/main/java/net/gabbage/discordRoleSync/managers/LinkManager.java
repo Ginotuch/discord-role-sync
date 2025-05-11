@@ -58,7 +58,8 @@ public class LinkManager {
         // Set Discord Nickname if feature is enabled
         if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
             final String discordUserId = request.getDiscordUserId(); // Effectively final for lambda
-            final UUID minecraftPlayerUUID = request.getMinecraftPlayerUUID(); // Effectively final for lambda
+            // The method parameter 'minecraftPlayerUUID' will be captured by the lambda.
+            // The UUID from request.getMinecraftPlayerUUID() should be identical to the parameter.
 
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                 Player player = plugin.getServer().getPlayer(minecraftPlayerUUID);

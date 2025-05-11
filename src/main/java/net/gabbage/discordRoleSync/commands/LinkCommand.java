@@ -23,8 +23,27 @@ public class LinkCommand implements CommandExecutor {
         }
 
         Player player = (Player) sender;
-        // Logic for /link command will go here
-        player.sendMessage("Link command received. Functionality to be implemented.");
+        net.gabbage.discordRoleSync.managers.LinkManager linkManager = plugin.getLinkManager();
+        net.gabbage.discordRoleSync.managers.ConfigManager configManager = plugin.getConfigManager();
+
+        if (linkManager.hasPendingRequest(player.getUniqueId())) {
+            net.gabbage.discordRoleSync.util.LinkRequest request = linkManager.getPendingRequest(player.getUniqueId());
+            if (request == null) { // Should ideally not happen if hasPendingRequest was true, but good for safety
+                player.sendMessage(configManager.getMessage("link.request_expired_ingame"));
+                return true;
+            }
+
+            if (linkManager.confirmLink(player.getUniqueId())) {
+                player.sendMessage(configManager.getMessage("link.success_ingame", "%discord_user_tag%", request.getFullDiscordName()));
+                // Optionally, notify the Discord user via the bot if desired (requires JDA interaction)
+                // plugin.getDiscordManager().sendDirectMessage(request.getDiscordUserId(), configManager.getMessage("link.success_discord", "%mc_username%", player.getName()));
+            } else {
+                // This case might occur if the request expired between hasPendingRequest and confirmLink, or other issues.
+                player.sendMessage(configManager.getMessage("link.no_pending_request_ingame", "%your_mc_username%", player.getName()));
+            }
+        } else {
+            player.sendMessage(configManager.getMessage("link.no_pending_request_ingame", "%your_mc_username%", player.getName()));
+        }
 
         return true;
     }

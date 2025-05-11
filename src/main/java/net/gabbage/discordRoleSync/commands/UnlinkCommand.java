@@ -23,8 +23,22 @@ public class UnlinkCommand implements CommandExecutor {
         }
 
         Player player = (Player) sender;
-        // Logic for /unlink command will go here
-        player.sendMessage("Unlink command received. Functionality to be implemented.");
+        net.gabbage.discordRoleSync.managers.LinkManager linkManager = plugin.getLinkManager();
+        net.gabbage.discordRoleSync.managers.ConfigManager configManager = plugin.getConfigManager();
+        net.gabbage.discordRoleSync.storage.LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
+
+        if (!linkedPlayersManager.isMcAccountLinked(player.getUniqueId())) {
+            player.sendMessage(configManager.getMessage("unlink.not_linked_ingame"));
+            return true;
+        }
+
+        if (linkManager.unlinkPlayer(player)) {
+            player.sendMessage(configManager.getMessage("unlink.success_ingame"));
+        } else {
+            // This else block might be redundant if unlinkPlayer itself doesn't return false for other reasons
+            // than "not linked", which is already checked. But as a fallback.
+            player.sendMessage(configManager.getMessage("unlink.error_ingame"));
+        }
 
         return true;
     }

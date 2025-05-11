@@ -46,11 +46,14 @@ roles:
 # %discord_user_tag% - Discord user's tag (e.g., Username#1234 or just Username if new system)
 # %mc_username% - Minecraft player's username
 # %your_mc_username% - The Minecraft username of the player receiving the message (used in contexts where they need to provide it)
+# %link_code% - The unique code for the /link command
 messages:
   link:
-    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Type &e/link&a or click &e[HERE]&a to link accounts."
-    request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link&r in-game to confirm."
+    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Type &e/link %link_code%&a or click &e[HERE]&a to link accounts."
+    request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link <CODE>&r in-game to confirm (the code will be shown to them)."
     no_pending_request_ingame: "&cYou have no pending link requests. Ask a Discord user to use /link %your_mc_username% in the Discord server."
+    link_code_missing_ingame: "&cPlease provide the link code. Usage: /link <CODE>"
+    link_code_invalid_ingame: "&cThe link code you provided is invalid or has expired. Please try again or request a new link."
     already_linked_ingame: "&cYour Minecraft account is already linked to a Discord account."
     already_linked_discord_self: "&cYour Discord account is already linked to a Minecraft account."
     already_linked_discord_other_mc: "&cThe Minecraft account &e%mc_username%&c is already linked to another Discord account."

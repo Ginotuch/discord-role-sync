@@ -94,6 +94,10 @@ public class ConfigManager {
         return mainConfig.getString("discord.guild-id", "");
     }
 
+    public String getDiscordInviteLink() {
+        return mainConfig.getString("discord.invite-link", "");
+    }
+
     public int getSyncInterval() {
         return mainConfig.getInt("sync.interval-minutes", 5);
     }

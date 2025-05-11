@@ -20,6 +20,10 @@ commands:
     description: Denies a pending link request from Discord.
     usage: "/denylink"
     permission: discordrolesync.denylink
+  discord:
+    description: Shows Discord link status and invite link.
+    usage: "/discord"
+    permission: discordrolesync.discord
 permissions:
   discordrolesync.link:
     description: Allows users to use the /link command.
@@ -29,6 +33,9 @@ permissions:
     default: true
   discordrolesync.denylink:
     description: Allows users to deny a pending link request.
+    default: true
+  discordrolesync.discord:
+    description: Shows Discord link status and invite.
     default: true
   discordrolesync.reload:
     description: Allows users to reload the DiscordRoleSync plugin.

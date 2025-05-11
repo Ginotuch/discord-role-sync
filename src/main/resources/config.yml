@@ -7,6 +7,8 @@ discord:
   # An invalid or inaccessible Guild ID (like "1370985075235356722" if that was the ID you were trying to use)
   # will cause warnings (e.g., "Could not find Discord guild with ID") and prevent guild-specific features from working correctly.
   guild-id: ""
+  # The invite link for your Discord server. Leave empty if you don't want to show one.
+  invite-link: "https://discord.gg/yourinvitecode"
 
 # Synchronization Settings
 sync:

@@ -5,8 +5,14 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -21,6 +27,7 @@ public class RoleSyncService {
 
     private final DiscordRoleSync plugin;
     private final ConfigManager configManager;
+    private final Permission vaultPerms;
 
     private record RoleMapping(String ingameGroup, String discordRoleId, String discordRoleName) {}
     private final List<RoleMapping> parsedMappings;
@@ -28,6 +35,7 @@ public class RoleSyncService {
     public RoleSyncService(DiscordRoleSync plugin) {
         this.plugin = plugin;
         this.configManager = plugin.getConfigManager();
+        this.vaultPerms = DiscordRoleSync.getVaultPermissions(); // Get Vault instance
         this.parsedMappings = parseRoleMappings();
     }
 
@@ -132,21 +140,16 @@ public class RoleSyncService {
 
     private void syncIngameToDiscord(OfflinePlayer offlinePlayer, Member discordMember, Guild guild) {
         Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
+        String worldName = (onlinePlayer != null && onlinePlayer.getWorld() != null) ? onlinePlayer.getWorld().getName() : null; // Get world name if player is online, can be null for some offline Vault operations
+
+        if (vaultPerms == null) {
+            plugin.getLogger().severe("[I2D] Vault permissions not available. Skipping in-game group check for " + offlinePlayer.getName());
+            return;
+        }
 
         for (RoleMapping mapping : parsedMappings) {
-            // Placeholder for checking in-game group. Assumes Vault or similar.
-            // For Vault: net.milkbowl.vault.permission.Permission perms = ...; perms.playerInGroup(player, mapping.ingameGroup());
-            boolean playerHasIngameGroup;
-            if (onlinePlayer != null) {
-                // This is a basic permission check, real group checks are more complex via Vault/LuckPerms API
-                playerHasIngameGroup = onlinePlayer.hasPermission("group." + mapping.ingameGroup());
-                plugin.getLogger().fine("[I2D] Player " + onlinePlayer.getName() + " hasPermission(group." + mapping.ingameGroup() + "): " + playerHasIngameGroup);
-            } else {
-                // Offline player group checking is more complex and highly dependent on the permissions plugin.
-                // For now, we'll log and skip if player is offline for this part of the sync.
-                plugin.getLogger().warning("[I2D] Player " + offlinePlayer.getName() + " is offline. Accurate in-game group check for '" + mapping.ingameGroup() + "' requires specific offline permission plugin support (e.g., LuckPerms API). Skipping Discord role update for this mapping.");
-                continue;
-            }
+            boolean playerHasIngameGroup = vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup());
+            plugin.getLogger().fine("[I2D] Player " + offlinePlayer.getName() + " in group " + mapping.ingameGroup() + " (World context: " + worldName + "): " + playerHasIngameGroup);
 
             Role discordRole = guild.getRoleById(mapping.discordRoleId());
             if (discordRole == null) {
@@ -185,6 +188,12 @@ public class RoleSyncService {
     private void syncDiscordToIngame(OfflinePlayer offlinePlayer, Member discordMember, Guild guild) {
         String playerName = offlinePlayer.getName() != null ? offlinePlayer.getName() : offlinePlayer.getUniqueId().toString();
         Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
+        String worldName = (onlinePlayer != null && onlinePlayer.getWorld() != null) ? onlinePlayer.getWorld().getName() : null;
+
+        if (vaultPerms == null) {
+            plugin.getLogger().severe("[D2I] Vault permissions not available. Skipping in-game group modification for " + playerName);
+            return;
+        }
 
         for (RoleMapping mapping : parsedMappings) {
             Role discordRole = guild.getRoleById(mapping.discordRoleId());
@@ -194,40 +203,30 @@ public class RoleSyncService {
             }
 
             boolean memberHasDiscordRole = discordMember.getRoles().contains(discordRole);
-            // Placeholder for checking in-game group.
-            boolean playerHasIngameGroup = false;
-            if (onlinePlayer != null) {
-                playerHasIngameGroup = onlinePlayer.hasPermission("group." + mapping.ingameGroup());
-                 plugin.getLogger().fine("[D2I] Player " + onlinePlayer.getName() + " hasPermission(group." + mapping.ingameGroup() + "): " + playerHasIngameGroup);
-            } else {
-                // Offline group checking is complex. For now, assume false if offline for this check.
-                // A real implementation would query the permissions plugin's API for offline players.
-                plugin.getLogger().fine("[D2I] Player " + playerName + " is offline. Assuming does not have group '" + mapping.ingameGroup() + "' for this check unless specific offline support is added.");
-            }
+            boolean playerHasIngameGroup = vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup());
+            plugin.getLogger().fine("[D2I] Player " + playerName + " in group " + mapping.ingameGroup() + " (World context: " + worldName + "): " + playerHasIngameGroup);
 
 
             if (memberHasDiscordRole && !playerHasIngameGroup) {
-                // Placeholder for adding in-game group. Assumes Vault or specific perm API.
-                // Example: Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + playerName + " parent add " + mapping.ingameGroup());
-                plugin.getLogger().info("[D2I] Granting in-game group '" + mapping.ingameGroup() + "' to " + playerName + " because they have Discord role '" + discordRole.getName() + "'. (Permissions command placeholder)");
-                // TODO: Implement actual command dispatch or API call to permissions plugin
-                // Ensure this runs on the main server thread if it modifies player data or calls Bukkit API
-                final String commandToAdd = "lp user " + playerName + " parent add " + mapping.ingameGroup(); // Example for LuckPerms
+                plugin.getLogger().info("[D2I] Granting in-game group '" + mapping.ingameGroup() + "' to " + playerName + " because they have Discord role '" + discordRole.getName() + "'.");
+                // Run on main thread for Bukkit API calls that modify player data
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandToAdd);
-                     plugin.getLogger().info("[D2I] Dispatched command: '" + commandToAdd + "'. Success: " + success);
+                    if (vaultPerms.playerAddGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world often means global or default world context for Vault
+                        plugin.getLogger().info("[D2I] Successfully added group '" + mapping.ingameGroup() + "' to " + playerName);
+                    } else {
+                        plugin.getLogger().warning("[D2I] Failed to add group '" + mapping.ingameGroup() + "' to " + playerName + ". Check Vault-compatible permissions plugin logs.");
+                    }
                 });
 
-
             } else if (!memberHasDiscordRole && playerHasIngameGroup) {
-                // Placeholder for removing in-game group.
-                // Example: Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + playerName + " parent remove " + mapping.ingameGroup());
-                plugin.getLogger().info("[D2I] Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " because they no longer have Discord role '" + discordRole.getName() + "'. (Permissions command placeholder)");
-                // TODO: Implement actual command dispatch or API call to permissions plugin
-                final String commandToRemove = "lp user " + playerName + " parent remove " + mapping.ingameGroup(); // Example for LuckPerms
+                plugin.getLogger().info("[D2I] Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " because they no longer have Discord role '" + discordRole.getName() + "'.");
+                // Run on main thread
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandToRemove);
-                    plugin.getLogger().info("[D2I] Dispatched command: '" + commandToRemove + "'. Success: " + success);
+                    if (vaultPerms.playerRemoveGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world
+                        plugin.getLogger().info("[D2I] Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName);
+                    } else {
+                        plugin.getLogger().warning("[D2I] Failed to remove group '" + mapping.ingameGroup() + "' from " + playerName + ". Check Vault-compatible permissions plugin logs.");
+                    }
                 });
             }
         }
@@ -243,67 +242,64 @@ public class RoleSyncService {
 
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(minecraftPlayerUUID);
         String playerName = offlinePlayer.getName() != null ? offlinePlayer.getName() : minecraftPlayerUUID.toString();
-
-        if (plugin.getDiscordManager().getJda() == null) {
-            plugin.getLogger().warning("JDA not available. Cannot clear Discord roles for " + playerName + " (Discord ID: " + discordUserId + ")");
-            return; // Cannot clear Discord roles if JDA is down
-        }
-        String guildId = configManager.getDiscordGuildId();
-        if (guildId == null || guildId.isEmpty()) {
-            plugin.getLogger().warning("Discord Guild ID not configured. Cannot clear Discord roles.");
-            return;
-        }
-        Guild guild = plugin.getDiscordManager().getJda().getGuildById(guildId);
-        if (guild == null) {
-            plugin.getLogger().warning("Discord Guild with ID " + guildId + " not found. Cannot clear Discord roles.");
-            return;
-        }
-
-        // Clear Discord roles
-        guild.retrieveMemberById(discordUserId).queue(
-            discordMember -> {
-                for (RoleMapping mapping : parsedMappings) {
-                    Role discordRole = guild.getRoleById(mapping.discordRoleId());
-                    if (discordRole != null && discordMember.getRoles().contains(discordRole)) {
-                        try {
-                            guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
-                                success -> plugin.getLogger().info("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking."),
-                                failure -> plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure)
-                            );
-                        } catch (InsufficientPermissionException e) {
-                            plugin.getLogger().warning("Bot lacks permission to remove role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.");
-                        } catch (HierarchyException e) {
-                            plugin.getLogger().warning("Bot cannot remove role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink due to role hierarchy.");
-                        }
-                    }
-                }
-            },
-            failure -> plugin.getLogger().warning("Could not retrieve Discord member " + discordUserId + " for clearing roles on unlink: " + failure.getMessage())
-        );
-
-        // Clear In-Game roles (placeholder)
         Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
-        for (RoleMapping mapping : parsedMappings) {
-            boolean playerHadIngameGroup = false; // Assume they might have had it
-            if (onlinePlayer != null) {
-                // This is a basic permission check, real group checks are more complex
-                playerHadIngameGroup = onlinePlayer.hasPermission("group." + mapping.ingameGroup());
-            } else {
-                // Offline check is complex, for unlinking, we might just try to remove if it was a synced role.
-                // For safety, only remove if we are sure it was a synced role.
-                // This part needs careful consideration with the chosen permissions plugin.
-                // For now, we'll assume if it's in mappings, it *could* have been synced.
-                playerHadIngameGroup = true; // Tentatively assume true for offline to attempt removal
-                plugin.getLogger().fine("Player " + playerName + " is offline. Assuming they might have group '" + mapping.ingameGroup() + "' for unlink cleanup.");
-            }
+        String worldName = (onlinePlayer != null && onlinePlayer.getWorld() != null) ? onlinePlayer.getWorld().getName() : null;
 
-            if (playerHadIngameGroup) {
-                plugin.getLogger().info("Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " due to unlinking. (Permissions command placeholder)");
-                // TODO: Implement actual command dispatch or API call to permissions plugin
-                final String commandToRemove = "lp user " + playerName + " parent remove " + mapping.ingameGroup(); // Example for LuckPerms
+
+        // Clear Discord roles first
+        if (plugin.getDiscordManager().getJda() != null) {
+            String guildId = configManager.getDiscordGuildId();
+            if (guildId != null && !guildId.isEmpty()) {
+                Guild guild = plugin.getDiscordManager().getJda().getGuildById(guildId);
+                if (guild != null) {
+                    guild.retrieveMemberById(discordUserId).queue(
+                        discordMember -> {
+                            for (RoleMapping mapping : parsedMappings) {
+                                Role discordRole = guild.getRoleById(mapping.discordRoleId());
+                                if (discordRole != null && discordMember.getRoles().contains(discordRole)) {
+                                    try {
+                                        guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
+                                            success -> plugin.getLogger().info("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking."),
+                                            failure -> plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure)
+                                        );
+                                    } catch (InsufficientPermissionException e) {
+                                        plugin.getLogger().warning("Bot lacks permission to remove role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.");
+                                    } catch (HierarchyException e) {
+                                        plugin.getLogger().warning("Bot cannot remove role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink due to role hierarchy.");
+                                    }
+                                }
+                            }
+                        },
+                        failure -> plugin.getLogger().warning("Could not retrieve Discord member " + discordUserId + " for clearing roles on unlink: " + failure.getMessage())
+                    );
+                } else {
+                    plugin.getLogger().warning("Discord Guild with ID " + guildId + " not found. Cannot clear Discord roles.");
+                }
+            } else {
+                plugin.getLogger().warning("Discord Guild ID not configured. Cannot clear Discord roles.");
+            }
+        } else {
+            plugin.getLogger().warning("JDA not available. Cannot clear Discord roles for " + playerName + " (Discord ID: " + discordUserId + ")");
+        }
+
+        // Clear In-Game roles
+        if (vaultPerms == null) {
+            plugin.getLogger().severe("Vault permissions not available. Skipping in-game role clearing for " + playerName);
+            return;
+        }
+
+        for (RoleMapping mapping : parsedMappings) {
+            // We attempt to remove the group if it was part of the mappings,
+            // as we assume it might have been added by this plugin.
+            // Check if player is in group before attempting removal.
+            if (vaultPerms.playerInGroup(worldName, offlinePlayer, mapping.ingameGroup())) {
+                plugin.getLogger().info("Removing in-game group '" + mapping.ingameGroup() + "' from " + playerName + " due to unlinking.");
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandToRemove);
-                    plugin.getLogger().info("Dispatched unlink command: '" + commandToRemove + "'. Success: " + success);
+                    if (vaultPerms.playerRemoveGroup(null, offlinePlayer, mapping.ingameGroup())) { // Using null for world
+                        plugin.getLogger().info("Successfully removed group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink.");
+                    } else {
+                        plugin.getLogger().warning("Failed to remove group '" + mapping.ingameGroup() + "' from " + playerName + " on unlink. Check Vault-compatible permissions plugin logs.");
+                    }
                 });
             }
         }

@@ -30,10 +30,22 @@ public class PlayerJoinListener implements Listener {
         if (linkedPlayersManager.isMcAccountLinked(playerUUID)) {
             String discordId = linkedPlayersManager.getDiscordId(playerUUID);
             if (discordId != null && !discordId.isEmpty()) {
-                plugin.getLogger().info("Linked player " + player.getName() + " joined. Triggering role synchronization.");
-                // Run async to avoid blocking login and to match RoleSyncService's async nature for JDA calls
+                plugin.getLogger().info("Linked player " + player.getName() + " joined. Triggering role synchronization and nickname update.");
+
+                // Synchronize Discord Nickname if feature is enabled
+                if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+                    // This is also run async to keep JDA calls off the main thread
+                    final String currentName = player.getName(); // Capture current name for async task
+                    final String finalDiscordId = discordId; // Capture for async task
+                    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                        plugin.getDiscordManager().setDiscordNickname(finalDiscordId, currentName);
+                    });
+                }
+
+                // Run role synchronization async to avoid blocking login and to match RoleSyncService's async nature for JDA calls
+                final String finalDiscordIdForRoles = discordId; // Capture for async task
                 plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                    roleSyncService.synchronizeRoles(playerUUID, discordId);
+                    roleSyncService.synchronizeRoles(playerUUID, finalDiscordIdForRoles);
                 });
             } else {
                 // This case should ideally not happen if isMcAccountLinked is true, but good for robustness

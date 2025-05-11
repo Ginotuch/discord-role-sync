@@ -143,6 +143,12 @@ public class RoleSyncService {
             discordMember -> {
                 plugin.getLogger().fine("Synchronizing roles for MC: " + playerName + " (UUID: " + minecraftPlayerUUID + ") and Discord: " + discordMember.getUser().getAsTag() + " (ID: " + discordUserId + ")");
 
+                // Synchronize Discord Nickname if feature is enabled
+                if (configManager.shouldSynchronizeDiscordNickname()) {
+                    // The synchronizeRoles method is already called asynchronously, so this JDA call is fine here.
+                    plugin.getDiscordManager().setDiscordNickname(discordUserId, playerName);
+                }
+
                 for (RoleMapping mapping : parsedMappings) {
                     plugin.getLogger().fine("Processing mapping: Ingame '" + mapping.ingameGroup() + "' <-> Discord Role '" + mapping.discordRoleName() + "' (ID: " + mapping.discordRoleId() + ") with direction: " + mapping.syncDirection());
                     switch (mapping.syncDirection()) {

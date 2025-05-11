@@ -2,11 +2,15 @@ package net.gabbage.discordRoleSync.managers;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
+import net.gabbage.discordRoleSync.discord.DiscordCommandListener;
 
-import javax.security.auth.login.LoginException;
 
 public class DiscordManager {
 
@@ -28,21 +32,59 @@ public class DiscordManager {
 
         try {
             jda = JDABuilder.createDefault(botToken)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT) // Add intents as needed
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.DIRECT_MESSAGES) // Added DIRECT_MESSAGES for DMs
                     .setMemberCachePolicy(MemberCachePolicy.ALL) // Cache all members for easier role management
-                    // Add event listeners here later (e.g., for slash commands)
+                    .addEventListeners(new DiscordCommandListener(plugin)) // Register command listener
                     .build();
             jda.awaitReady(); // Wait for JDA to be fully connected
             plugin.getLogger().info("Successfully connected to Discord as " + jda.getSelfUser().getAsTag());
+
+            registerCommands();
+
         } catch (InterruptedException e) {
             plugin.getLogger().severe("JDA connection was interrupted.");
             Thread.currentThread().interrupt();
-            e.printStackTrace();
-        } catch (Exception e) {
-            plugin.getLogger().severe("An unexpected error occurred while connecting to Discord.");
-            e.printStackTrace();
+        } catch (Exception e) { // Catching generic Exception for LoginException and others
+            plugin.getLogger().severe("An unexpected error occurred while connecting to Discord: " + e.getMessage());
+            e.printStackTrace(); // Print stack trace for detailed debugging
         }
     }
+
+    private void registerCommands() {
+        if (jda == null) return;
+
+        String guildId = plugin.getConfigManager().getDiscordGuildId();
+        if (guildId != null && !guildId.isEmpty()) {
+            Guild guild = jda.getGuildById(guildId);
+            if (guild != null) {
+                guild.updateCommands().addCommands(
+                        Commands.slash("link", "Links your Discord account to a Minecraft account.")
+                                .addOption(OptionType.STRING, "username", "Your Minecraft username", true)
+                ).queue(
+                        cmds -> plugin.getLogger().info("Successfully registered guild slash commands for guild " + guildId),
+                        error -> plugin.getLogger().severe("Failed to register guild slash commands for guild " + guildId + ": " + error.getMessage())
+                );
+            } else {
+                plugin.getLogger().warning("Could not find Discord Guild with ID: " + guildId + ". Slash commands will be registered globally. This might take up to an hour to propagate.");
+                registerGlobalCommands();
+            }
+        } else {
+            plugin.getLogger().info("No Discord Guild ID configured. Slash commands will be registered globally. This might take up to an hour to propagate.");
+            registerGlobalCommands();
+        }
+    }
+
+    private void registerGlobalCommands() {
+        if (jda == null) return;
+        jda.updateCommands().addCommands(
+                Commands.slash("link", "Links your Discord account to a Minecraft account.")
+                        .addOption(OptionType.STRING, "username", "Your Minecraft username", true)
+        ).queue(
+                cmds -> plugin.getLogger().info("Successfully registered global slash commands."),
+                error -> plugin.getLogger().severe("Failed to register global slash commands: " + error.getMessage())
+        );
+    }
+
 
     public void disconnect() {
         if (jda != null) {
@@ -53,5 +95,22 @@ public class DiscordManager {
 
     public JDA getJda() {
         return jda;
+    }
+
+    public void sendDirectMessage(String userId, String message) {
+        if (jda == null) {
+            plugin.getLogger().warning("Attempted to send DM while JDA is not initialized.");
+            return;
+        }
+        jda.retrieveUserById(userId).queue(
+            user -> user.openPrivateChannel().queue(
+                channel -> channel.sendMessage(message).queue(
+                    success -> plugin.getLogger().info("Successfully sent DM to " + user.getAsTag()),
+                    failure -> plugin.getLogger().warning("Failed to send DM to " + user.getAsTag() + ": " + failure.getMessage())
+                ),
+                failure -> plugin.getLogger().warning("Failed to open private channel with " + userId + ": " + failure.getMessage())
+            ),
+            failure -> plugin.getLogger().warning("Failed to retrieve user " + userId + " for DM: " + failure.getMessage())
+        );
     }
 }

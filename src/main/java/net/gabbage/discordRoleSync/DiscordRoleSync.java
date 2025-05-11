@@ -1,9 +1,6 @@
 package net.gabbage.discordRoleSync;
 
 import net.gabbage.discordRoleSync.commands.LinkCommand;
-import net.gabbage.discordRoleSync.commands.LinkCommand;
-import net.gabbage.discordRoleSync.commands.UnlinkCommand;
-import net.gabbage.discordRoleSync.commands.LinkCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;

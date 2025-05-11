@@ -17,6 +17,7 @@ public class ConfigManager {
         config = plugin.getConfig();
         // Add default values if they don't exist
         config.addDefault("discord.bot-token", "YOUR_BOT_TOKEN_HERE");
+        config.addDefault("discord.guild-id", ""); // Optional: For guild-specific command registration
         config.addDefault("sync.interval-minutes", 5);
         config.addDefault("linking.request-timeout-minutes", 5);
         config.addDefault("roles.sync-direction", "BOTH"); // Options: INGAME_TO_DISCORD, DISCORD_TO_INGAME, BOTH
@@ -47,6 +48,10 @@ public class ConfigManager {
 
     public String getBotToken() {
         return config.getString("discord.bot-token", "YOUR_BOT_TOKEN_HERE");
+    }
+
+    public String getDiscordGuildId() {
+        return config.getString("discord.guild-id", "");
     }
 
     public int getSyncInterval() {

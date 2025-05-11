@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException; // Added import
+import net.dv8tion.jda.api.exceptions.HierarchyException; // Added import
 import java.time.Duration;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.discord.DiscordCommandListener;

@@ -4,6 +4,7 @@ import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import net.gabbage.discordRoleSync.util.LinkRequest;
 import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer; // Added import
 
 import java.util.Map;
 import java.util.UUID;

@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList; // Added import
 import java.util.Collections;
 import java.util.List;
 
@@ -41,8 +42,11 @@ public class StatusSubCommand implements IDiscordSubCommand {
         boolean isLinked = linkedPlayersManager.isMcAccountLinked(player.getUniqueId());
         String discordInviteLink = configManager.getDiscordInviteLink();
 
+        // Prepare messages to be sent in order
+        List<TextComponent> componentsToSend = new ArrayList<>();
+
         // Header
-        player.sendMessage(configManager.getMessage("discord_command.header"));
+        componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.header"))));
 
         // Invite Link
         if (discordInviteLink != null && !discordInviteLink.isEmpty() && !"https://discord.gg/yourinvitecode".equals(discordInviteLink)) {
@@ -55,58 +59,65 @@ public class StatusSubCommand implements IDiscordSubCommand {
             String placeholder = "%discord_invite_link_component%";
             if (inviteLineTemplate.contains(placeholder)) {
                 String[] parts = inviteLineTemplate.split(java.util.regex.Pattern.quote(placeholder), 2);
-                TextComponent finalMessage = new TextComponent(TextComponent.fromLegacyText(parts[0]));
-                finalMessage.addExtra(inviteLinkComponent);
+                TextComponent finalInviteMessage = new TextComponent(TextComponent.fromLegacyText(parts[0]));
+                finalInviteMessage.addExtra(inviteLinkComponent);
                 if (parts.length > 1) {
-                    finalMessage.addExtra(new TextComponent(TextComponent.fromLegacyText(parts[1])));
+                    finalInviteMessage.addExtra(new TextComponent(TextComponent.fromLegacyText(parts[1])));
                 }
-                player.spigot().sendMessage(finalMessage);
+                componentsToSend.add(finalInviteMessage);
             } else {
-                TextComponent inviteMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "Invite link: "));
-                inviteMessage.addExtra(inviteLinkComponent);
-                player.spigot().sendMessage(inviteMessage);
+                TextComponent fallbackInviteMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "Invite link: "));
+                fallbackInviteMessage.addExtra(inviteLinkComponent);
+                componentsToSend.add(fallbackInviteMessage);
             }
         } else {
-            player.sendMessage(configManager.getMessage("discord_command.no_invite_configured"));
+            componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.no_invite_configured"))));
         }
 
-        player.sendMessage(" "); // Spacer
+        componentsToSend.add(new TextComponent(" ")); // Spacer
+        componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.status_header"))));
 
-        // Link Status
-        player.sendMessage(configManager.getMessage("discord_command.status_header"));
+        // Link Status - This part is now built and added to componentsToSend within the JDA callback or synchronously if not linked/JDA error
         if (isLinked) {
             String discordId = linkedPlayersManager.getDiscordId(player.getUniqueId());
             DiscordManager discordManager = plugin.getDiscordManager();
 
             if (discordManager != null && discordManager.getJda() != null) {
                 discordManager.getJda().retrieveUserById(discordId).queue(
-                    (net.dv8tion.jda.api.entities.User discordUser) -> { // Explicit type for clarity
-                        player.sendMessage(configManager.getMessage("discord_command.status_linked_line",
+                    (net.dv8tion.jda.api.entities.User discordUser) -> {
+                        componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.status_linked_line",
                                 "%discord_user_tag%", discordUser.getAsTag(),
                                 "%discord_user_id%", discordId
-                        ));
+                        ))));
+                        addRemainingAndSend(plugin, player, configManager, componentsToSend, isLinked);
                     },
                     (Throwable failure) -> {
                         plugin.getLogger().warning("Failed to retrieve Discord user " + discordId + " for /discord status: " + failure.getMessage());
-                        player.sendMessage(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
+                        componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
                                 "%discord_user_id%", discordId
-                        ));
+                        ))));
+                        addRemainingAndSend(plugin, player, configManager, componentsToSend, isLinked);
                     }
                 );
             } else {
-                // JDA not available, just show the ID with error message
-                player.sendMessage(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
+                // JDA not available
+                componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.status_linked_error_retrieving_discord_user",
                         "%discord_user_id%", discordId
-                ));
+                ))));
+                addRemainingAndSend(plugin, player, configManager, componentsToSend, isLinked);
             }
         } else {
-            player.sendMessage(configManager.getMessage("discord_command.status_not_linked_line"));
+            // Not linked
+            componentsToSend.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.status_not_linked_line"))));
+            addRemainingAndSend(plugin, player, configManager, componentsToSend, isLinked);
         }
+    }
 
-        player.sendMessage(" "); // Spacer
+    // Renamed method to avoid confusion and make its purpose clearer
+    private void addRemainingAndSend(DiscordRoleSync plugin, Player player, ConfigManager configManager, List<TextComponent> components, boolean isLinked) {
+        components.add(new TextComponent(" ")); // Spacer
+        components.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.action_header"))));
 
-        // Next Steps
-        player.sendMessage(configManager.getMessage("discord_command.action_header"));
         if (isLinked) {
             TextComponent unlinkMessage = new TextComponent(TextComponent.fromLegacyText(ChatColor.GRAY + "  To unlink your account, type "));
             TextComponent unlinkCommand = new TextComponent("/unlink");
@@ -114,13 +125,19 @@ public class StatusSubCommand implements IDiscordSubCommand {
             unlinkCommand.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/unlink"));
             unlinkCommand.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to type /unlink")));
             unlinkMessage.addExtra(unlinkCommand);
-            player.spigot().sendMessage(unlinkMessage);
+            components.add(unlinkMessage);
         } else {
-            player.sendMessage(configManager.getMessage("discord_command.action_not_linked_line", "%your_mc_username%", player.getName()));
+            components.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.action_not_linked_line", "%your_mc_username%", player.getName()))));
         }
 
-        // Footer
-        player.sendMessage(configManager.getMessage("discord_command.footer"));
+        components.add(new TextComponent(TextComponent.fromLegacyText(configManager.getMessage("discord_command.footer"))));
+
+        // Send all collected messages on the main thread
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            for (TextComponent component : components) {
+                player.spigot().sendMessage(component);
+            }
+        });
     }
 
     @Override

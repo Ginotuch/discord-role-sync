@@ -50,7 +50,8 @@ public class InspectSubCommand implements IDiscordSubCommand {
         UUID targetUUID = targetOfflinePlayer.getUniqueId();
         String actualUsername = targetOfflinePlayer.getName() != null ? targetOfflinePlayer.getName() : targetUsername; // Use stored name if available
 
-        sender.sendMessage(configManager.getMessage("inspect.inspecting_header", "%mc_username%", actualUsername));
+        List<String> messagesToSend = new ArrayList<>();
+        messagesToSend.add(configManager.getMessage("inspect.inspecting_header", "%mc_username%", actualUsername));
 
         LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
         if (linkedPlayersManager.isMcAccountLinked(targetUUID)) {

@@ -16,10 +16,12 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven { url = 'https://jitpack.io' } // For VaultAPI
 }
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly('com.github.MilkBowl:VaultAPI:1.7') // Vault API
     // Add JDA (Java Discord API)
     implementation("net.dv8tion:JDA:5.0.0-beta.24") {
         exclude module: 'opus-java' // Exclude components not typically needed for a Minecraft bot

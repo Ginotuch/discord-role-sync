@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class RoleSyncService {
 
@@ -25,23 +24,34 @@ public class RoleSyncService {
     private final Permission vaultPerms;
 
     private record RoleMapping(String ingameGroup, String discordRoleId, String discordRoleName) {}
-    private final List<RoleMapping> parsedMappings;
+    private final List<RoleMapping> parsedMappings; // Made non-final, populated by loadAndParseRoleMappings
 
     public RoleSyncService(DiscordRoleSync plugin) {
         this.plugin = plugin;
         this.configManager = plugin.getConfigManager();
         this.vaultPerms = DiscordRoleSync.getVaultPermissions(); // Get Vault instance
-        this.parsedMappings = parseRoleMappings();
+        this.parsedMappings = new ArrayList<>(); // Initialize as empty
     }
 
-    private List<RoleMapping> parseRoleMappings() {
+    public void loadAndParseRoleMappings() {
         List<RoleMapping> mappings = new ArrayList<>();
         List<String> configuredMappings = configManager.getRoleMappings();
         Guild guild = null;
         String guildId = configManager.getDiscordGuildId();
-        if (plugin.getDiscordManager().getJda() != null && guildId != null && !guildId.isEmpty()) {
-            guild = plugin.getDiscordManager().getJda().getGuildById(guildId);
+
+        // Ensure DiscordManager and JDA are available before trying to use them
+        DiscordManager discordManager = plugin.getDiscordManager();
+        if (discordManager != null && discordManager.getJda() != null && guildId != null && !guildId.isEmpty()) {
+            guild = discordManager.getJda().getGuildById(guildId);
+            if (guild == null) {
+                plugin.getLogger().warning("Could not find Discord guild with ID: " + guildId + " for fetching role names. Role names in logs might be incomplete.");
+            }
+        } else if (discordManager == null || discordManager.getJda() == null) {
+            plugin.getLogger().warning("JDA not available while parsing role mappings. Discord role names will not be fetched.");
+        } else if (guildId == null || guildId.isEmpty()){
+            plugin.getLogger().info("Discord Guild ID not configured. Discord role names will not be fetched from API during mapping parse.");
         }
+
 
         for (String mappingStr : configuredMappings) {
             String[] parts = mappingStr.split(":", 2);
@@ -62,20 +72,25 @@ public class RoleSyncService {
                         plugin.getLogger().warning("Invalid Discord Role ID format: " + discordRoleIdStr + " in mapping: " + mappingStr);
                         continue;
                     }
-                } else if (plugin.getDiscordManager().getJda() != null) {
-                     plugin.getLogger().warning("Discord Guild ID not configured or guild not found. Cannot verify Discord role names for mapping: " + mappingStr);
+                } else {
+                     // This case is covered by the JDA/guild availability checks at the start of the method.
+                     // If guild is null here, it means either JDA was unavailable, guildId was empty, or guild wasn't found.
+                     // The role name will remain "Unknown Role (ID: ...)".
                 }
-
 
                 mappings.add(new RoleMapping(ingameGroup, discordRoleIdStr, discordRoleName));
             } else {
                 plugin.getLogger().warning("Invalid role mapping format: " + mappingStr + ". Expected 'ingamegroup:discordroleid'.");
             }
         }
-        plugin.getLogger().info("Loaded " + mappings.size() + " role mappings.");
-        return mappings;
-    }
 
+        this.parsedMappings.clear();
+        this.parsedMappings.addAll(mappings);
+        plugin.getLogger().info("Loaded " + this.parsedMappings.size() + " role mappings.");
+        if (this.parsedMappings.isEmpty() && !configuredMappings.isEmpty()) {
+            plugin.getLogger().warning("No valid role mappings were parsed, but " + configuredMappings.size() + " mappings were found in config. Please check their format.");
+        }
+    }
 
     public void synchronizeRoles(UUID minecraftPlayerUUID, String discordUserId) {
         if (parsedMappings.isEmpty()) {

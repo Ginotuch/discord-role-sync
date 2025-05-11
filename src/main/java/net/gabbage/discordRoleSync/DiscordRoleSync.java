@@ -61,6 +61,14 @@ public final class DiscordRoleSync extends JavaPlugin {
         discordManager = new DiscordManager(this);
         discordManager.connect();
 
+        // Load role mappings after JDA is connected and potentially ready
+        if (discordManager.getJda() != null) {
+            roleSyncService.loadAndParseRoleMappings();
+        } else {
+            getLogger().severe("JDA connection failed. Role mappings will be empty and synchronization might not work as expected.");
+            // RoleSyncService will still operate with an empty parsedMappings list, which is safe.
+        }
+
         // Register Commands
         getCommand("link").setExecutor(new LinkCommand(this));
         getCommand("unlink").setExecutor(new UnlinkCommand(this));

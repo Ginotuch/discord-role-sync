@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import java.time.Duration;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.discord.DiscordCommandListener;
 
@@ -90,8 +91,24 @@ public class DiscordManager {
 
     public void disconnect() {
         if (jda != null) {
-            jda.shutdown();
-            plugin.getLogger().info("Disconnected from Discord.");
+            plugin.getLogger().info("Attempting to disconnect from Discord...");
+            jda.shutdown(); // Initiate shutdown
+            try {
+                // Wait up to 10 seconds for JDA to finish its shutdown processes
+                if (!jda.awaitShutdown(Duration.ofSeconds(10))) {
+                    plugin.getLogger().warning("JDA did not shut down gracefully within 10 seconds. Forcing shutdown...");
+                    jda.shutdownNow(); // Forcefully shut down remaining JDA threads
+                    // Optionally, wait a little longer for forced shutdown
+                    if (!jda.awaitShutdown(Duration.ofSeconds(5))) {
+                        plugin.getLogger().severe("JDA did not shut down even after forcing. There might be lingering threads.");
+                    }
+                }
+                plugin.getLogger().info("Successfully disconnected from Discord.");
+            } catch (InterruptedException e) {
+                plugin.getLogger().warning("Interrupted while waiting for JDA to shut down. Forcing shutdown now.");
+                jda.shutdownNow();
+                Thread.currentThread().interrupt(); // Preserve interrupt status
+            }
         }
     }
 

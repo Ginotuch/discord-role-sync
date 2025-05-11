@@ -130,7 +130,7 @@ public class DiscordCommandListener extends ListenerAdapter {
             }
         });
 
-        event.reply(configManager.getDiscordMessage("link.request_sent_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
+        event.reply(configManager.getDiscordMessage("link.request_sent_discord", "%mc_username%", minecraftUsername, "%link_code%", newRequest.getConfirmationCode())).setEphemeral(true).queue();
     }
 
     private void handleUnlinkCommand(@NotNull SlashCommandInteractionEvent event, User discordUser) {

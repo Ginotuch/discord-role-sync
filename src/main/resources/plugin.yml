@@ -16,12 +16,19 @@ commands:
     description: Reloads the DiscordRoleSync plugin and its configuration.
     usage: "/drsreload"
     permission: discordrolesync.reload
+  denylink:
+    description: Denies a pending link request from Discord.
+    usage: "/denylink"
+    permission: discordrolesync.denylink
 permissions:
   discordrolesync.link:
     description: Allows users to use the /link command.
     default: true
   discordrolesync.unlink:
     description: Allows users to use the /unlink command.
+    default: true
+  discordrolesync.denylink:
+    description: Allows users to deny a pending link request.
     default: true
   discordrolesync.reload:
     description: Allows users to reload the DiscordRoleSync plugin.

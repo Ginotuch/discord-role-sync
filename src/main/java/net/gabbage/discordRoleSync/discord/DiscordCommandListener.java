@@ -106,47 +106,69 @@ public class DiscordCommandListener extends ListenerAdapter {
             // and placeholders like %link_code% replaced with the actual code.
 
             String hereClickableText = "[HERE]";
-            String linkCommandClickableText = "/link " + newRequest.getConfirmationCode();
+            String linkCommandText = "/link " + newRequest.getConfirmationCode();
+            String denyClickableText = "[DENY]";
 
-            // Find the §e colored versions in the message string
-            String herePattern = ChatColor.YELLOW + hereClickableText;
-            String linkCommandPattern = ChatColor.YELLOW + linkCommandClickableText;
+            // Find the colored versions in the message string
+            String herePattern = ChatColor.YELLOW + hereClickableText; // &e[HERE]
+            String linkCommandPattern = ChatColor.YELLOW + linkCommandText; // &e/link CODE
+            String denyPattern = ChatColor.RED + denyClickableText;   // &c[DENY]
 
             int hereStartIndex = ingameMessage.indexOf(herePattern);
             int linkCommandStartIndex = ingameMessage.indexOf(linkCommandPattern);
+            int denyStartIndex = ingameMessage.indexOf(denyPattern);
 
-            if (hereStartIndex != -1 && linkCommandStartIndex != -1 && hereStartIndex < linkCommandStartIndex) {
-                // Both patterns found in the expected order
+            // Build the message component by component
+            List<TextComponent> components = new ArrayList<>();
+            int currentPos = 0;
 
-                // Part 1: Text before "[HERE]"
-                String textBeforeHere = ingameMessage.substring(0, hereStartIndex);
-                TextComponent part1Comp = new TextComponent(TextComponent.fromLegacyText(textBeforeHere));
+            // Determine the order of clickable elements
+            // For simplicity, assuming a fixed order in the message string: ...[HERE].../link CODE...[DENY]...
+            // A more robust solution might involve more complex parsing if the order can vary wildly.
 
-                // Part 2: Clickable "[HERE]"
-                TextComponent hereClickComp = new TextComponent(hereClickableText);
-                hereClickComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
-                hereClickComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
-                // hereClickComp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Click to link with code")));
+            if (hereStartIndex != -1 && linkCommandStartIndex != -1 && denyStartIndex != -1 &&
+                hereStartIndex < linkCommandStartIndex && linkCommandStartIndex < denyStartIndex) {
 
+                // Part 1: Before [HERE]
+                components.add(new TextComponent(TextComponent.fromLegacyText(ingameMessage.substring(currentPos, hereStartIndex))));
+                currentPos = hereStartIndex;
 
-                // Part 3: Text between "[HERE]" and "/link CODE"
-                String textBetween = ingameMessage.substring(hereStartIndex + herePattern.length(), linkCommandStartIndex);
-                TextComponent part2Comp = new TextComponent(TextComponent.fromLegacyText(textBetween));
+                // Part 2: [HERE]
+                TextComponent hereComp = new TextComponent(hereClickableText);
+                hereComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                hereComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
+                components.add(hereComp);
+                currentPos += herePattern.length();
 
-                // Part 4: Clickable "/link CODE"
-                TextComponent linkCmdClickComp = new TextComponent(linkCommandClickableText);
-                linkCmdClickComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
-                linkCmdClickComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
-                // linkCmdClickComp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText("Click to link with code")));
+                // Part 3: Between [HERE] and /link CODE
+                components.add(new TextComponent(TextComponent.fromLegacyText(ingameMessage.substring(currentPos, linkCommandStartIndex))));
+                currentPos = linkCommandStartIndex;
 
-                // Part 5: Text after "/link CODE"
-                String textAfterLinkCommand = ingameMessage.substring(linkCommandStartIndex + linkCommandPattern.length());
-                TextComponent part3Comp = new TextComponent(TextComponent.fromLegacyText(textAfterLinkCommand));
+                // Part 4: /link CODE
+                TextComponent linkCmdComp = new TextComponent(linkCommandText); // Display the actual command text
+                linkCmdComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                linkCmdComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
+                components.add(linkCmdComp);
+                currentPos += linkCommandPattern.length();
+                
+                // Part 5: Between /link CODE and [DENY]
+                components.add(new TextComponent(TextComponent.fromLegacyText(ingameMessage.substring(currentPos, denyStartIndex))));
+                currentPos = denyStartIndex;
 
-                targetPlayer.spigot().sendMessage(part1Comp, hereClickComp, part2Comp, linkCmdClickComp, part3Comp);
+                // Part 6: [DENY]
+                TextComponent denyComp = new TextComponent(denyClickableText);
+                denyComp.setColor(net.md_5.bungee.api.ChatColor.RED);
+                denyComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/denylink"));
+                components.add(denyComp);
+                currentPos += denyPattern.length();
 
-            } else if (hereStartIndex != -1) {
-                // Fallback: Only "[HERE]" is made clickable (original logic if linkCommandPattern isn't found or order is wrong)
+                // Part 7: After [DENY]
+                if (currentPos < ingameMessage.length()) {
+                    components.add(new TextComponent(TextComponent.fromLegacyText(ingameMessage.substring(currentPos))));
+                }
+                targetPlayer.spigot().sendMessage(components.toArray(new TextComponent[0]));
+
+            } else if (hereStartIndex != -1) { // Fallback if only [HERE] is found or others are in wrong order
                 String part1Str = ingameMessage.substring(0, hereStartIndex);
                 String part2Str = ingameMessage.substring(hereStartIndex + herePattern.length());
 

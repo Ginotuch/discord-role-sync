@@ -197,4 +197,24 @@ public class DiscordManager {
             failure -> plugin.getLogger().warning("Failed to retrieve user " + userId + " for DM: " + failure.getMessage())
         );
     }
+
+    public void sendLinkDeniedDM(String userId, String minecraftUsername) {
+        if (jda == null) {
+            plugin.getLogger().warning("Attempted to send Link Denied DM while JDA is not initialized.");
+            return;
+        }
+        ConfigManager configManager = plugin.getConfigManager();
+        String message = configManager.getDiscordMessage("denylink.request_denied_discord", "%mc_username%", minecraftUsername);
+
+        jda.retrieveUserById(userId).queue(
+            user -> user.openPrivateChannel().queue(
+                channel -> channel.sendMessage(message).queue(
+                    success -> plugin.getLogger().info("Successfully sent Link Denied DM to " + user.getAsTag()),
+                    failure -> plugin.getLogger().warning("Failed to send Link Denied DM to " + user.getAsTag() + ": " + failure.getMessage())
+                ),
+                failure -> plugin.getLogger().warning("Failed to open private channel with " + userId + " for Link Denied DM: " + failure.getMessage())
+            ),
+            failure -> plugin.getLogger().warning("Failed to retrieve user " + userId + " for Link Denied DM: " + failure.getMessage())
+        );
+    }
 }

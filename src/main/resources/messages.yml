@@ -1,5 +1,5 @@
 # Message file version. Used by the plugin to determine if it should auto-update.
-_messages_version: 2
+_messages_version: 3
 
 # Set to true to prevent the plugin from automatically updating this file
 # if a new version with new default messages is released.
@@ -14,7 +14,7 @@ _messages_version_do_not_overwrite: false
 # %link_code% - The unique code for the /link command
 messages:
   link:
-    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Click &e[HERE]&a or type &e/link %link_code%&a to link accounts."
+    request_received_ingame: "&aRequest received to link to the Discord account \"&e%discord_user_displayname%&a\" (&e%discord_user_tag%&a). Click &e[HERE]&a or type &e/link %link_code%&a to link, or click &c[DENY]&a to reject."
     request_sent_discord: "Link request sent to Minecraft player &e%mc_username%&r. They need to type &e/link %link_code%&r in-game to confirm (the code will be shown to them)."
     no_pending_request_ingame: "&cYou have no pending link requests. Please go to our Discord server and use the /link command with your Minecraft username (%your_mc_username%) to start the linking process."
     link_code_missing_ingame: "&cPlease provide the link code. Usage: /link <CODE>"
@@ -40,3 +40,7 @@ messages:
     no_permission: "&cYou do not have permission to reload this plugin."
     success: "&aDiscordRoleSync plugin has been successfully reloaded."
     failure: "&cAn error occurred while reloading DiscordRoleSync. Check console for details."
+  denylink:
+    success_ingame: "&aYou have successfully denied the link request from &e%discord_user_tag%&a."
+    no_pending_request_ingame: "&cYou have no pending link request to deny."
+    request_denied_discord: "Your link request to Minecraft player &e%mc_username%&r has been denied."

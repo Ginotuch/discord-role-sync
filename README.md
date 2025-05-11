@@ -212,3 +212,7 @@ If you wish to build the plugin from source:
 2. Ensure you have JDK (Java Development Kit) 17 or higher installed.
 3. Run `./gradlew shadowJar` (Linux/macOS) or `gradlew.bat shadowJar` (Windows) in the root directory of the project.
 4. The compiled JAR will be located in `build/libs/`.
+
+## AI Disclaimer
+
+The entirety of this code repository was developed by a Large Language Model (LLM) in collaboration with a human operator utilizing the `aider` coding agent.

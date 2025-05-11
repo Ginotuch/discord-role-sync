@@ -12,12 +12,14 @@ import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import net.gabbage.discordRoleSync.util.LinkRequest;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class DiscordCommandListener extends ListenerAdapter {
 

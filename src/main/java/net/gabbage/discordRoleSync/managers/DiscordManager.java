@@ -134,6 +134,13 @@ public class DiscordManager {
         }
 
         guild.retrieveMemberById(userId).queue(member -> {
+            // Check if the nickname is already what we want it to be
+            String currentNickname = member.getNickname();
+            if (nickname.equals(currentNickname)) {
+                plugin.getLogger().fine("Discord nickname for " + member.getUser().getAsTag() + " is already '" + nickname + "'. No update needed.");
+                return;
+            }
+
             try {
                 member.modifyNickname(nickname).reason("Linked to Minecraft account: " + nickname).queue(
                         success -> plugin.getLogger().info("Set nickname for " + member.getUser().getAsTag() + " to '" + nickname + "' in guild " + guild.getName()),

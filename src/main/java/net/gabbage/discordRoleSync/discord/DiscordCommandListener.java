@@ -94,10 +94,11 @@ public class DiscordCommandListener extends ListenerAdapter {
         LinkRequest newRequest = new LinkRequest(discordUser.getId(), discordUser.getName(), discordUser.getDiscriminator(), targetMinecraftUUID);
         linkManager.addPendingRequest(newRequest);
 
-        // Send message to in-game player (plain for now, clickable TextComponent is a later step)
+        // Send message to in-game player
         String ingameMessage = configManager.getMessage("link.request_received_ingame",
                 "%discord_user_displayname%", discordUser.getGlobalName() != null ? discordUser.getGlobalName() : discordUser.getName(), // Use global name if available
-                "%discord_user_tag%", discordUser.getAsTag()
+                "%discord_user_tag%", discordUser.getAsTag(),
+                "%link_code%", newRequest.getConfirmationCode()
         );
         // Run on Bukkit's main thread to interact with player
         plugin.getServer().getScheduler().runTask(plugin, () -> {
@@ -109,17 +110,15 @@ public class DiscordCommandListener extends ListenerAdapter {
 
             if (clickableStartIndex != -1) {
                 String part1Str = ingameMessage.substring(0, clickableStartIndex);
-                // The part after "[HERE]" starts immediately after the colored "[HERE]" text.
-                // For example, if message is "... click §e[HERE]§a to ...", part2Str should be "§a to ..."
                 String part2Str = ingameMessage.substring(clickableStartIndex + translatedClickableTextWithColor.length());
 
                 TextComponent part1Component = new TextComponent(TextComponent.fromLegacyText(part1Str));
                 
                 TextComponent clickableComponent = new TextComponent(textToMakeClickable);
                 clickableComponent.setColor(net.md_5.bungee.api.ChatColor.YELLOW); // Set color for [HERE]
-                clickableComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link"));
+                clickableComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/link " + newRequest.getConfirmationCode()));
                 // Optionally, add a hover event:
-                // clickableComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[]{new TextComponent("Click to confirm link")}));
+                // clickableComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[]{new TextComponent("Click to confirm link with code " + newRequest.getConfirmationCode())}));
 
                 TextComponent part2Component = new TextComponent(TextComponent.fromLegacyText(part2Str));
 

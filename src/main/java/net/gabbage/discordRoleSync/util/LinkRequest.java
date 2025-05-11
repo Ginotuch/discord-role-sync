@@ -1,5 +1,7 @@
 package net.gabbage.discordRoleSync.util;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.UUID;
 
 public class LinkRequest {
@@ -8,6 +10,7 @@ public class LinkRequest {
     private final String discordUserDiscriminator; // Discord discriminator (e.g., #0001 or empty if new username system)
     private final UUID minecraftPlayerUUID;
     private final long requestTimeMillis;
+    private final String confirmationCode;
 
     public LinkRequest(String discordUserId, String discordUserName, String discordUserDiscriminator, UUID minecraftPlayerUUID) {
         this.discordUserId = discordUserId;
@@ -15,6 +18,20 @@ public class LinkRequest {
         this.discordUserDiscriminator = discordUserDiscriminator;
         this.minecraftPlayerUUID = minecraftPlayerUUID;
         this.requestTimeMillis = System.currentTimeMillis();
+        this.confirmationCode = generateConfirmationCode();
+    }
+
+    private String generateConfirmationCode() {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[6]; // 6 bytes will give 8 Base64 characters
+        random.nextBytes(bytes);
+        // Using URL and Filename safe Base64 encoder to avoid '+' and '/' characters if the code is ever used in URLs.
+        // Removing padding '=' as it's not needed for a short code.
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes).substring(0, 6).toUpperCase(); // Take first 6 chars, uppercase
+    }
+
+    public String getConfirmationCode() {
+        return confirmationCode;
     }
 
     public String getDiscordUserId() {

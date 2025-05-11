@@ -33,6 +33,9 @@ permissions:
   discordrolesync.discord:
     description: Shows Discord link status and invite.
     default: true
+  discordrolesync.inspect:
+    description: Allows staff to inspect a player's Discord link status.
+    default: op
   discordrolesync.reload:
     description: Allows users to reload the DiscordRoleSync plugin.
     default: op

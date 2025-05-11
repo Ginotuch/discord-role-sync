@@ -1,5 +1,5 @@
 # Message file version. Used by the plugin to determine if it should auto-update.
-_messages_version: 4
+_messages_version: 5
 
 # Set to true to prevent the plugin from automatically updating this file
 # if a new version with new default messages is released.
@@ -57,3 +57,10 @@ messages:
     action_linked_line: "  &7To unlink your account, type &a/unlink" # This will be made clickable
     action_not_linked_line: "  &7To link, go to our Discord and type &a/link %your_mc_username%"
     no_permission: "&cYou do not have permission to use this command."
+  inspect:
+    usage: "&cUsage: /discord inspect <minecraft_username>"
+    player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."
+    inspecting_header: "&5[DISCORD] &r&7Inspecting &e%mc_username%&7:"
+    linked_to: "  &aLinked &7to Discord: &e%discord_user_tag% &7(ID: &e%discord_user_id%&7)"
+    not_linked: "  &cNot linked &7to any Discord account."
+    error_retrieving_discord_user: "  &aLinked &7to Discord ID: &e%discord_user_id% &7(Could not retrieve Discord username)."

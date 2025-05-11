@@ -35,11 +35,16 @@ public class DiscordCommandListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("link")) {
-            return;
-        }
-
         User discordUser = event.getUser();
+
+        if (event.getName().equals("link")) {
+            handleLinkCommand(event, discordUser);
+        } else if (event.getName().equals("unlink")) {
+            handleUnlinkCommand(event, discordUser);
+        }
+    }
+
+    private void handleLinkCommand(@NotNull SlashCommandInteractionEvent event, User discordUser) {
         OptionMapping usernameOption = event.getOption("username");
 
         if (usernameOption == null) {
@@ -125,5 +130,40 @@ public class DiscordCommandListener extends ListenerAdapter {
         });
 
         event.reply(configManager.getMessage("link.request_sent_discord", "%mc_username%", minecraftUsername)).setEphemeral(true).queue();
+    }
+
+    private void handleUnlinkCommand(@NotNull SlashCommandInteractionEvent event, User discordUser) {
+        String discordUserId = discordUser.getId();
+
+        if (!linkedPlayersManager.isDiscordAccountLinked(discordUserId)) {
+            event.reply(configManager.getMessage("unlink.not_linked_discord")).setEphemeral(true).queue();
+            return;
+        }
+
+        UUID mcUUID = linkedPlayersManager.getMcUUID(discordUserId);
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mcUUID);
+        String mcUsername = offlinePlayer.getName() != null ? offlinePlayer.getName() : mcUUID.toString();
+
+        try {
+            // Remove the link from storage
+            linkedPlayersManager.removeLinkByDiscordId(discordUserId); // This also saves to file
+
+            // Clear roles
+            plugin.getRoleSyncService().clearRolesOnUnlink(mcUUID, discordUserId);
+
+            plugin.getLogger().info("Discord user " + discordUser.getAsTag() + " (ID: " + discordUserId + ") unlinked from Minecraft account " + mcUsername + " (UUID: " + mcUUID + ") via Discord command.");
+            event.reply(configManager.getMessage("unlink.success_discord", "%mc_username%", mcUsername)).setEphemeral(true).queue();
+
+            // Optionally, notify the Minecraft player if they are online
+            Player onlinePlayer = offlinePlayer.isOnline() ? offlinePlayer.getPlayer() : null;
+            if (onlinePlayer != null) {
+                // Using a generic message, or you could add a new config message for this scenario
+                onlinePlayer.sendMessage(ChatColor.YELLOW + "Your Minecraft account has been unlinked from the Discord account " + discordUser.getAsTag() + " by a command from Discord.");
+            }
+
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Error during Discord /unlink command for user " + discordUser.getAsTag(), e);
+            event.reply(configManager.getMessage("unlink.error_discord")).setEphemeral(true).queue();
+        }
     }
 }

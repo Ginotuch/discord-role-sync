@@ -58,3 +58,7 @@ messages:
     not_linked_ingame: "&cYour Minecraft account is not linked to any Discord account."
     success_ingame: "&aYour Minecraft account has been successfully unlinked."
     error_ingame: "&cAn error occurred while trying to unlink your account."
+    # Messages for Discord /unlink command
+    not_linked_discord: "&cYour Discord account is not linked to any Minecraft account."
+    success_discord: "&aYour Discord account has been successfully unlinked from the Minecraft account &e%mc_username%&a."
+    error_discord: "&cAn error occurred while trying to unlink your account from Discord."

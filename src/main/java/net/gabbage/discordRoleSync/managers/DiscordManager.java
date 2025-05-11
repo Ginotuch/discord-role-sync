@@ -59,7 +59,8 @@ public class DiscordManager {
             if (guild != null) {
                 guild.updateCommands().addCommands(
                         Commands.slash("link", "Links your Discord account to a Minecraft account.")
-                                .addOption(OptionType.STRING, "username", "Your Minecraft username", true)
+                                .addOption(OptionType.STRING, "username", "Your Minecraft username", true),
+                        Commands.slash("unlink", "Unlinks your Discord account from a Minecraft account.")
                 ).queue(
                         cmds -> plugin.getLogger().info("Successfully registered guild slash commands for guild " + guildId),
                         error -> plugin.getLogger().severe("Failed to register guild slash commands for guild " + guildId + ": " + error.getMessage())
@@ -78,7 +79,8 @@ public class DiscordManager {
         if (jda == null) return;
         jda.updateCommands().addCommands(
                 Commands.slash("link", "Links your Discord account to a Minecraft account.")
-                        .addOption(OptionType.STRING, "username", "Your Minecraft username", true)
+                        .addOption(OptionType.STRING, "username", "Your Minecraft username", true),
+                Commands.slash("unlink", "Unlinks your Discord account from a Minecraft account.")
         ).queue(
                 cmds -> plugin.getLogger().info("Successfully registered global slash commands."),
                 error -> plugin.getLogger().severe("Failed to register global slash commands: " + error.getMessage())

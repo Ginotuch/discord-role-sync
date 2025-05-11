@@ -53,7 +53,7 @@ messages:
     status_header: "&7Link Status:"
     status_linked_line: "  &aLinked &7to Discord User ID: &e%discord_user_id%"
     status_not_linked_line: "  &cNot Linked"
-    action_header: "&7Next Steps:"
+    action_header: "&7Available Actions:"
     action_linked_line: "  &7To unlink your account, type &a/unlink" # This will be made clickable
     action_not_linked_line: "  &7To link, go to our Discord and use &a/link %your_mc_username%"
     no_permission: "&cYou do not have permission to use this command."

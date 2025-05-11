@@ -4,10 +4,16 @@ import net.gabbage.discordRoleSync.DiscordRoleSync;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class LinkCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class LinkCommand implements CommandExecutor, TabCompleter {
 
     private final DiscordRoleSync plugin;
 
@@ -62,5 +68,23 @@ public class LinkCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (args.length == 1 && sender instanceof Player) {
+            Player player = (Player) sender;
+            net.gabbage.discordRoleSync.managers.LinkManager linkManager = plugin.getLinkManager();
+            if (linkManager.hasPendingRequest(player.getUniqueId())) {
+                net.gabbage.discordRoleSync.util.LinkRequest request = linkManager.getPendingRequest(player.getUniqueId());
+                if (request != null) {
+                    String pendingCode = request.getConfirmationCode();
+                    if (pendingCode.toUpperCase().startsWith(args[0].toUpperCase())) {
+                        return Collections.singletonList(pendingCode);
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 }

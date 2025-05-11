@@ -71,7 +71,10 @@ public final class DiscordRoleSync extends JavaPlugin {
         }
 
         // Register Commands
-        getCommand("link").setExecutor(new LinkCommand(this));
+        LinkCommand linkCommandExecutor = new LinkCommand(this);
+        getCommand("link").setExecutor(linkCommandExecutor);
+        getCommand("link").setTabCompleter(linkCommandExecutor); // Set TabCompleter for /link
+
         getCommand("unlink").setExecutor(new UnlinkCommand(this));
         getCommand("drsreload").setExecutor(new ReloadCommand(this)); // Register new command
 

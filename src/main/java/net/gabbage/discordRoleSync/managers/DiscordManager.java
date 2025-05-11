@@ -32,7 +32,7 @@ public class DiscordManager {
 
         try {
             jda = JDABuilder.createDefault(botToken)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.DIRECT_MESSAGES) // Added DIRECT_MESSAGES for DMs
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES) // Removed MESSAGE_CONTENT, kept DIRECT_MESSAGES for DMs
                     .setMemberCachePolicy(MemberCachePolicy.ALL) // Cache all members for easier role management
                     .addEventListeners(new DiscordCommandListener(plugin)) // Register command listener
                     .build();

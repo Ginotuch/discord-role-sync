@@ -4,6 +4,7 @@ import net.gabbage.discordRoleSync.commands.LinkCommand;
 import net.gabbage.discordRoleSync.commands.UnlinkCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import net.gabbage.discordRoleSync.managers.DiscordManager;
+import net.gabbage.discordRoleSync.managers.LinkManager; // Import LinkManager
 import net.gabbage.discordRoleSync.listeners.PlayerJoinListener; // Import the new listener
 import net.gabbage.discordRoleSync.service.RoleSyncService;
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;

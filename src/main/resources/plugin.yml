@@ -45,3 +45,6 @@ permissions:
   discordrolesync.reload:
     description: Allows users to reload the DiscordRoleSync plugin.
     default: op
+  discordrolesync.roles:
+    description: Allows users to view the configured role mappings.
+    default: op

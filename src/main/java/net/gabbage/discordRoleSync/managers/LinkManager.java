@@ -61,25 +61,8 @@ public class LinkManager {
         }
 
         // Set Discord Nickname if feature is enabled
-        if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
-            final String discordUserId = request.getDiscordUserId(); // Effectively final for lambda
-            // The method parameter 'minecraftPlayerUUID' will be captured by the lambda.
-            // The UUID from request.getMinecraftPlayerUUID() should be identical to the parameter.
-
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                Player player = plugin.getServer().getPlayer(minecraftPlayerUUID);
-                if (player != null && player.isOnline()) { // Ensure player is online to get current name
-                    plugin.getDiscordManager().setDiscordNickname(discordUserId, player.getName());
-                } else {
-                    OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(minecraftPlayerUUID);
-                    if (offlinePlayer.getName() != null) {
-                        plugin.getDiscordManager().setDiscordNickname(discordUserId, offlinePlayer.getName());
-                    } else {
-                        plugin.getLogger().warning("Could not set Discord nickname for " + discordUserId + ": Minecraft player " + minecraftPlayerUUID + " name not found (player offline and name not retrievable).");
-                    }
-                }
-            });
-        }
+        // This is now handled by synchronizeRoles to ensure it's part of the atomic operations.
+        // if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) { ... }
 
         plugin.getRoleSyncService().synchronizeRoles(request.getMinecraftPlayerUUID(), request.getDiscordUserId());
         plugin.getLogger().info("Player " + minecraftPlayerUUID + " successfully linked with Discord user " + request.getFullDiscordName() + " (" + request.getDiscordUserId() + "). Initial role sync triggered.");
@@ -197,16 +180,8 @@ public class LinkManager {
         }
 
         // Set Discord Nickname if feature is enabled
-        if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
-            final String discordUserId = discordId; // Effectively final for lambda
-            // The method parameter 'minecraftPlayerUUID' will be captured by the lambda.
-            // The UUID from request.getMinecraftPlayerUUID() should be identical to the parameter.
-
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                // Player name is already available from targetPlayer.getName()
-                plugin.getDiscordManager().setDiscordNickname(discordUserId, playerName);
-            });
-        }
+        // This is now handled by synchronizeRoles to ensure it's part of the atomic operations.
+        // if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) { ... }
 
         // Trigger role synchronization
         plugin.getRoleSyncService().synchronizeRoles(mcUUID, discordId);

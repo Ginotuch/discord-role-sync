@@ -140,6 +140,9 @@ Minecraft usernames and provides several administrative commands.
     * Tab completion is available for online player usernames.
 * `/discord roles`: Lists all configured role mappings, their direction, and Discord role names/IDs.
     * Permission: `discordrolesync.roles` (default: op)
+* `/discord sync <minecraft_username>`: Manually triggers a full role and nickname synchronization for the specified linked Minecraft player.
+    * Permission: `discordrolesync.sync` (default: op)
+    * Tab completion is available for online player usernames.
 
 ## Permissions
 
@@ -152,6 +155,7 @@ Minecraft usernames and provides several administrative commands.
 * `discordrolesync.inspect`: Allows use of the `/discord inspect <player>` subcommand. (Default: `op`)
 * `discordrolesync.manuallink`: Allows use of the `/discord manuallink <player> <discord_id>` subcommand. (Default: `op`)
 * `discordrolesync.roles`: Allows use of the `/discord roles` subcommand. (Default: `op`)
+* `discordrolesync.sync`: Allows use of the `/discord sync <player>` subcommand. (Default: `op`)
 
 ## How Role Synchronization Works
 

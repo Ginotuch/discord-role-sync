@@ -48,3 +48,6 @@ permissions:
   discordrolesync.roles:
     description: Allows users to view the configured role mappings.
     default: op
+  discordrolesync.sync:
+    description: Allows users to manually trigger a role synchronization for a player.
+    default: op

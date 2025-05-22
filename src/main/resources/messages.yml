@@ -86,3 +86,10 @@ messages:
     mapping_entry: "&7- In-game: &e%ingame_group%&7, Discord Role: &e%discord_role_name% &7(ID: &e%discord_role_id%&7), Direction: &e%direction%"
     no_mappings: "&7No role mappings are currently configured."
     footer: "&5&m----------------------------------------------"
+  sync:
+    usage: "&cUsage: /discord sync <minecraft_username>"
+    player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."
+    player_not_linked: "&cPlayer &e%mc_username%&c is not linked to a Discord account."
+    error_missing_discord_id: "&cCould not find Discord ID for linked player &e%mc_username%&c. Sync aborted."
+    success: "&5[DISCORD] &r&aSuccessfully initiated role synchronization for &e%mc_username%&a."
+    no_permission: "&cYou do not have permission to manually sync roles."

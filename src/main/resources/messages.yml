@@ -80,3 +80,9 @@ messages:
     error_linking: "&cAn unexpected error occurred while trying to manually link the accounts."
     error_retrieving_existing_discord_user: "&cMinecraft account &e%mc_username%&c is already linked to Discord ID &e%discord_user_id%&c (Could not retrieve Discord username)."
     error_retrieving_existing_mc_user: "&cDiscord ID &e%discord_user_id%&c is already linked to a Minecraft account (Could not retrieve Minecraft username)."
+  roles:
+    no_permission: "&cYou do not have permission to view role mappings."
+    header: "&5[DISCORD] &r&7Configured Role Mappings:"
+    mapping_entry: "&7- In-game: &e%ingame_group%&7, Discord Role: &e%discord_role_name% &7(ID: &e%discord_role_id%&7), Direction: &e%direction%"
+    no_mappings: "&7No role mappings are currently configured."
+    footer: "&5&m----------------------------------------------"

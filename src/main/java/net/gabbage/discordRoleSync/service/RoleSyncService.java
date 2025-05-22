@@ -283,11 +283,17 @@ public class RoleSyncService {
                     guild.retrieveMemberById(discordUserId).queue(
                         discordMember -> {
                             for (RoleMapping mapping : parsedMappings) {
+                                // Only remove roles that are synced from In-game to Discord or Both ways
+                                if (!"INGAME_TO_DISCORD".equals(mapping.syncDirection()) && !"BOTH".equals(mapping.syncDirection())) {
+                                    plugin.getLogger().fine("Skipping Discord role removal for '" + mapping.discordRoleName() + "' on unlink for " + discordMember.getUser().getAsTag() + " due to sync direction: " + mapping.syncDirection());
+                                    continue;
+                                }
+
                                 Role discordRole = guild.getRoleById(mapping.discordRoleId());
                                 if (discordRole != null && discordMember.getRoles().contains(discordRole)) {
                                     try {
                                         guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
-                                            success -> plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking."),
+                                            success -> plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking (sync direction: " + mapping.syncDirection() + ")."),
                                             failure -> plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure)
                                         );
                                     } catch (InsufficientPermissionException e) {

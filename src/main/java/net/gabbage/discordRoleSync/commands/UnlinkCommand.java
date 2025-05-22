@@ -80,13 +80,28 @@ public class UnlinkCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        OfflinePlayer targetOfflinePlayer = Bukkit.getOfflinePlayer(targetName); // Deprecated but standard way
-        if (!targetOfflinePlayer.hasPlayedBefore() && !targetOfflinePlayer.isOnline()) {
+        OfflinePlayer targetOfflinePlayer;
+        Player onlinePlayer = Bukkit.getPlayerExact(targetName);
+
+        if (onlinePlayer != null) {
+            targetOfflinePlayer = onlinePlayer;
+        } else {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlineByName = Bukkit.getOfflinePlayer(targetName);
+            targetOfflinePlayer = offlineByName;
+        }
+
+        if (targetOfflinePlayer == null || !targetOfflinePlayer.hasPlayedBefore()) {
             sender.sendMessage(configManager.getMessage("unlink.player_not_found", "%mc_username%", targetName));
             return;
         }
 
         UUID targetUUID = targetOfflinePlayer.getUniqueId();
+        if (targetUUID == null) {
+            plugin.getLogger().warning("Unlink: Could not retrieve UUID for player " + targetName + ". This might indicate an issue with player data or an offline-mode server where the name couldn't be resolved to a valid UUID.");
+            sender.sendMessage(configManager.getMessage("unlink.player_not_found", "%mc_username%", targetName));
+            return;
+        }
         if (!linkedPlayersManager.isMcAccountLinked(targetUUID)) {
             sender.sendMessage(configManager.getMessage("unlink.other_not_linked_ingame", "%mc_username%", targetName));
             return;

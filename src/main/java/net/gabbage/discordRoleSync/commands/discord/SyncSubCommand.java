@@ -38,14 +38,29 @@ public class SyncSubCommand implements IDiscordSubCommand {
         }
 
         String minecraftUsername = args[0];
-        OfflinePlayer targetOfflinePlayer = Bukkit.getOfflinePlayer(minecraftUsername);
 
-        if (!targetOfflinePlayer.hasPlayedBefore() && !targetOfflinePlayer.isOnline()) {
+        OfflinePlayer targetOfflinePlayer;
+        Player onlinePlayer = Bukkit.getPlayerExact(minecraftUsername);
+
+        if (onlinePlayer != null) {
+            targetOfflinePlayer = onlinePlayer;
+        } else {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlineByName = Bukkit.getOfflinePlayer(minecraftUsername);
+            targetOfflinePlayer = offlineByName;
+        }
+
+        if (targetOfflinePlayer == null || !targetOfflinePlayer.hasPlayedBefore()) {
             sender.sendMessage(configManager.getMessage("sync.player_not_found", "%mc_username%", minecraftUsername));
             return;
         }
 
         UUID targetUUID = targetOfflinePlayer.getUniqueId();
+        if (targetUUID == null) {
+            plugin.getLogger().warning("Sync: Could not retrieve UUID for player " + minecraftUsername + ". This might indicate an issue with player data or an offline-mode server where the name couldn't be resolved to a valid UUID.");
+            sender.sendMessage(configManager.getMessage("sync.player_not_found", "%mc_username%", minecraftUsername));
+            return;
+        }
         String actualMcUsername = targetOfflinePlayer.getName() != null ? targetOfflinePlayer.getName() : minecraftUsername;
         LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
 

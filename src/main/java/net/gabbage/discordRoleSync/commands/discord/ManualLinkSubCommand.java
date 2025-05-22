@@ -44,12 +44,36 @@ public class ManualLinkSubCommand implements IDiscordSubCommand {
         String minecraftUsername = args[0];
         String discordIdString = args[1];
 
-        OfflinePlayer targetOfflinePlayer = Bukkit.getOfflinePlayer(minecraftUsername);
-        if (!targetOfflinePlayer.hasPlayedBefore() && !targetOfflinePlayer.isOnline()) {
+        OfflinePlayer targetOfflinePlayer;
+        Player onlinePlayer = Bukkit.getPlayerExact(minecraftUsername);
+
+        if (onlinePlayer != null) {
+            targetOfflinePlayer = onlinePlayer; // Player object is an OfflinePlayer
+        } else {
+            // Player is not online, use the deprecated method for offline lookup by name.
+            // This is acknowledged as deprecated but is the Bukkit API's way to get an OfflinePlayer by name
+            // for players who have played before but are currently offline.
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlineByName = Bukkit.getOfflinePlayer(minecraftUsername);
+            targetOfflinePlayer = offlineByName;
+        }
+
+        // Check if the player data is valid for linking.
+        // targetOfflinePlayer could be null if Bukkit.getOfflinePlayer(name) somehow returns null (not typical).
+        // !targetOfflinePlayer.hasPlayedBefore() is key: if a name has never joined, we can't link it.
+        if (targetOfflinePlayer == null || !targetOfflinePlayer.hasPlayedBefore()) {
             sender.sendMessage(configManager.getMessage("manuallink.player_not_found", "%mc_username%", minecraftUsername));
             return;
         }
+
         UUID targetUUID = targetOfflinePlayer.getUniqueId();
+        // Additional check for null UUID, though hasPlayedBefore() should generally ensure a non-null UUID
+        // for players who have genuinely played on an online-mode server.
+        if (targetUUID == null) {
+            plugin.getLogger().warning("ManualLink: Could not retrieve UUID for player " + minecraftUsername + ". This might indicate an issue with player data or an offline-mode server where the name couldn't be resolved to a valid UUID.");
+            sender.sendMessage(configManager.getMessage("manuallink.player_not_found", "%mc_username%", minecraftUsername));
+            return;
+        }
         String actualMcUsername = targetOfflinePlayer.getName() != null ? targetOfflinePlayer.getName() : minecraftUsername;
 
         try {

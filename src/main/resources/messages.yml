@@ -32,6 +32,11 @@ messages:
     not_linked_ingame: "&5[DISCORD] &r&7Your Minecraft account is not linked to any Discord account."
     success_ingame: "&5[DISCORD] &r&aYour Minecraft account has been successfully unlinked."
     error_ingame: "&cAn error occurred while trying to unlink your account."
+    usage_others: "&cUsage: /unlink <player_username>"
+    player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."
+    other_not_linked_ingame: "&5[DISCORD] &r&7Minecraft account &e%mc_username%&7 is not linked to any Discord account."
+    success_other_ingame: "&5[DISCORD] &r&aSuccessfully unlinked &e%mc_username%&a from their Discord account."
+    no_permission_others: "&cYou do not have permission to unlink other players."
     # Messages for Discord /unlink command
     not_linked_discord: "&cYour Discord account is not linked to any Minecraft account."
     success_discord: "&aYour Discord account has been successfully unlinked from the Minecraft account &e%mc_username%&a."

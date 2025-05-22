@@ -76,7 +76,10 @@ public final class DiscordRoleSync extends JavaPlugin {
         getCommand("link").setExecutor(linkCommandExecutor);
         getCommand("link").setTabCompleter(linkCommandExecutor); // Set TabCompleter for /link
 
-        getCommand("unlink").setExecutor(new UnlinkCommand(this));
+        UnlinkCommand unlinkCommandExecutor = new UnlinkCommand(this);
+        getCommand("unlink").setExecutor(unlinkCommandExecutor);
+        getCommand("unlink").setTabCompleter(unlinkCommandExecutor); // Set TabCompleter for /unlink
+
         getCommand("denylink").setExecutor(new DenyLinkCommand(this));
         getCommand("discord").setExecutor(new DiscordCommand(this)); // DiscordCommand now handles its own subcommands
 

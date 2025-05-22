@@ -96,9 +96,21 @@ public class LinkManager {
         }, 20L * 60, 20L * 60 * 5); // Check every 5 minutes, after an initial 1 minute delay
     }
 
-    // Called by UnlinkCommand
+    // Called by UnlinkCommand for self-unlinking
     public boolean unlinkPlayer(Player player) {
-        UUID playerUUID = player.getUniqueId();
+        return unlinkPlayer((OfflinePlayer) player);
+    }
+
+    // Core unlinking logic, can be called for self or others
+    public boolean unlinkPlayer(OfflinePlayer targetPlayer) {
+        UUID playerUUID = targetPlayer.getUniqueId();
+        String playerName = targetPlayer.getName(); // Can be null if player never joined
+
+        if (playerName == null) { // Should ideally be checked by the command before calling this
+            plugin.getLogger().warning("Attempted to unlink player with UUID " + playerUUID + " but their name is null (likely never joined).");
+            return false;
+        }
+
         if (linkedPlayersManager.isMcAccountLinked(playerUUID)) {
             String discordId = linkedPlayersManager.getDiscordId(playerUUID);
             linkedPlayersManager.removeLinkByMcUUID(playerUUID); // This also removes from discordToMcLinks
@@ -108,7 +120,7 @@ public class LinkManager {
                 plugin.getDiscordManager().resetDiscordNickname(discordId);
             }
 
-            plugin.getLogger().info("Player " + player.getName() + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ".");
+            plugin.getLogger().info("Player " + playerName + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ".");
             plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId);
             return true;
         }

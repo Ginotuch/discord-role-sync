@@ -10,8 +10,8 @@ commands:
     description: Links your Minecraft account to your Discord account or accepts a pending link request.
     usage: "/link"
   unlink:
-    description: Unlinks your Minecraft account from your Discord account.
-    usage: "/unlink"
+    description: Unlinks your Minecraft account (or another player's account if you have permission) from Discord.
+    usage: "/unlink [player_username]"
   denylink:
     description: Denies a pending link request from Discord.
     usage: "/denylink"
@@ -25,8 +25,11 @@ permissions:
     description: Allows users to use the /link command.
     default: true
   discordrolesync.unlink:
-    description: Allows users to use the /unlink command.
+    description: Allows users to use the /unlink command to unlink themselves.
     default: true
+  discordrolesync.unlink.others:
+    description: Allows users to use the /unlink <player> command to unlink other players.
+    default: op
   discordrolesync.denylink:
     description: Allows users to deny a pending link request.
     default: true

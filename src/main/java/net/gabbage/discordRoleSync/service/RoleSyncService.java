@@ -174,8 +174,8 @@ public class RoleSyncService {
                 }
 
                 if (parsedMappings.isEmpty()) { // Double check after lock acquisition and JDA checks
-                     finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "No Mappings Post-Lock", "Sync");
-                     return;
+                     finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "No Mappings Post-Lock", "Sync"); // This handles the retrieveMemberById completion
+                     return; // Exit if no mappings
                 }
 
                 for (RoleMapping mapping : parsedMappings) {
@@ -199,10 +199,12 @@ public class RoleSyncService {
                             break;
                         default:
                             plugin.getLogger().warning("Unknown sync direction '" + mapping.syncDirection() + "' for mapping '" + mapping.ingameGroup() + "'. Skipping this mapping.");
+                            // If we skip, we should still decrement a counter if one was conceptually allocated for this mapping.
+                            // However, the current logic increments *before* calling, so no explicit decrement needed here if we just skip.
                     }
                 }
                 // Final decrement for the retrieveMemberById completion itself
-                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "Main Sync Logic Completion", "Sync");
+                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "Main Sync Logic Completion (after processing mappings)", "Sync");
             },
             failure -> {
                 plugin.getLogger().warning("Could not retrieve Discord member " + discordUserId + " in guild " + guild.getName() + " for role sync: " + failure.getMessage());
@@ -356,10 +358,11 @@ public class RoleSyncService {
                 if (guild != null) {
                     operationsCounter.incrementAndGet(); // For the retrieveMemberById itself for roles
                     guild.retrieveMemberById(discordUserId).queue(
-                        discordMember -> {
+                        discordMember -> { // retrieveMemberById for roles success
                             if (parsedMappings.isEmpty()) {
-                                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "No Discord Mappings for Unlink", "Unlink");
-                                return; // From lambda
+                                plugin.getLogger().fine("No Discord mappings to process for unlink for " + playerName);
+                                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "No Discord Mappings for Unlink", "Unlink"); // This handles the retrieveMemberById for roles
+                                return; // Exit if no mappings
                             }
                             for (RoleMapping mapping : parsedMappings) {
                                 if (!"INGAME_TO_DISCORD".equals(mapping.syncDirection()) && !"BOTH".equals(mapping.syncDirection())) {
@@ -389,7 +392,7 @@ public class RoleSyncService {
                                     }
                                 }
                             }
-                            finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "Discord Role Clearing Logic Complete", "Unlink"); // For retrieveMemberById for roles
+                            finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "Discord Role Clearing Logic Complete (after processing mappings)", "Unlink"); // For retrieveMemberById for roles
                         },
                         failure -> {
                             plugin.getLogger().warning("Could not retrieve Discord member " + discordUserId + " for clearing Discord roles on unlink: " + failure.getMessage());

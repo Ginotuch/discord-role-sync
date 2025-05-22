@@ -137,6 +137,12 @@ public class DiscordManager {
         }
 
         guild.retrieveMemberById(userId).queue(member -> {
+            // Check link status *again* right before modifying nickname
+            if (!plugin.getLinkedPlayersManager().isDiscordAccountLinked(userId)) {
+                plugin.getLogger().info("Skipping setDiscordNickname for " + member.getUser().getAsTag() + " because they are no longer linked. Considering this a successful state alignment.");
+                if (onCompleteSuccess != null) onCompleteSuccess.run(); // State is consistent with "not linked"
+                return;
+            }
             String currentNickname = member.getNickname();
             if (nickname.equals(currentNickname)) {
                 plugin.getLogger().fine("Discord nickname for " + member.getUser().getAsTag() + " is already '" + nickname + "'. No update needed.");
@@ -186,6 +192,12 @@ public class DiscordManager {
         }
 
         guild.retrieveMemberById(userId).queue(member -> {
+            // Check link status *again* right before modifying nickname
+            if (plugin.getLinkedPlayersManager().isDiscordAccountLinked(userId)) {
+                plugin.getLogger().info("Skipping resetDiscordNickname for " + member.getUser().getAsTag() + " because they are currently linked. Considering this a successful state alignment.");
+                if (onCompleteSuccess != null) onCompleteSuccess.run(); // State is consistent with "linked"
+                return;
+            }
             try {
                 if (member.getNickname() != null && !member.getNickname().isEmpty()) {
                     member.modifyNickname(null).reason("Unlinked from Minecraft account").queue(

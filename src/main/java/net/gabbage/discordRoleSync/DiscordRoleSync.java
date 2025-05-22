@@ -147,8 +147,29 @@ public final class DiscordRoleSync extends JavaPlugin {
 
     public void reloadPlugin() {
         getLogger().info("Reloading DiscordRoleSync...");
+
+        String oldGuildId = null;
+        // Ensure configManager and discordManager are available and JDA is connected to get the current guild ID
+        if (configManager != null && discordManager != null && discordManager.getJda() != null) {
+            oldGuildId = configManager.getDiscordGuildId();
+        }
+
         shutdownPluginLogic(); // Gracefully shut down current operations
-        initializePluginLogic(); // Re-initialize everything
+        initializePluginLogic(); // Re-initialize everything with new configuration
+
+        // After re-initialization, the new configManager and discordManager are active
+        // and JDA (if successfully connected) is for the new configuration.
+        if (discordManager != null && discordManager.getJda() != null) {
+            String newGuildId = configManager.getDiscordGuildId(); // Get new guild ID from reloaded config
+
+            // If oldGuildId was set, and it's different from the newGuildId (or newGuildId is now empty, meaning global)
+            if (oldGuildId != null && !oldGuildId.isEmpty() && !oldGuildId.equals(newGuildId)) {
+                getLogger().info("Guild ID changed from '" + oldGuildId + "' to '" + (newGuildId == null || newGuildId.isEmpty() ? "global/default" : newGuildId) + "'. Attempting to clear commands from the old guild...");
+                discordManager.clearCommandsFromGuild(oldGuildId);
+            }
+        }
+        // Command registration for the new guild (or global) happens as part of initializePluginLogic -> discordManager.connect()
+
         getLogger().info("DiscordRoleSync reloaded successfully.");
     }
 

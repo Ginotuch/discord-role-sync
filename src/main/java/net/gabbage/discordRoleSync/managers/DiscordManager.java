@@ -197,4 +197,28 @@ public class DiscordManager {
         // DM functionality has been removed as per user request.
         // plugin.getLogger().fine("DM sending is disabled. Attempted to send Link Denied DM to " + userId + " regarding MC user: " + minecraftUsername);
     }
+
+    public void clearCommandsFromGuild(String guildIdToClear) {
+        if (jda == null) {
+            plugin.getLogger().warning("Cannot clear commands from guild " + guildIdToClear + ": JDA is not initialized.");
+            return;
+        }
+        if (guildIdToClear == null || guildIdToClear.isEmpty()) {
+            // This case should ideally be handled by the caller, but good to have a safeguard.
+            plugin.getLogger().fine("Cannot clear commands: No specific guild ID provided to clear from.");
+            return;
+        }
+
+        Guild guild = jda.getGuildById(guildIdToClear);
+        if (guild != null) {
+            plugin.getLogger().info("Attempting to clear slash commands from old guild: " + guild.getName() + " (" + guildIdToClear + ")");
+            guild.updateCommands().addCommands().queue(
+                success -> plugin.getLogger().info("Successfully cleared slash commands from guild: " + guildIdToClear),
+                error -> plugin.getLogger().severe("Failed to clear slash commands from guild " + guildIdToClear + ": " + error.getMessage())
+            );
+        } else {
+            // This can happen if the bot was removed from the old guild, or the ID was for a guild it was never in.
+            plugin.getLogger().warning("Could not find old guild with ID '" + guildIdToClear + "' to clear commands. Bot might have been removed or ID is incorrect. This is not necessarily an error if the bot was intentionally removed from that guild.");
+        }
+    }
 }

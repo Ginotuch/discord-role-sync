@@ -138,17 +138,20 @@ Minecraft usernames and provides several administrative commands.
   bypasses the normal confirmation process.
     * Permission: `discordrolesync.manuallink` (default: op)
     * Tab completion is available for online player usernames.
+* `/discord roles`: Lists all configured role mappings, their direction, and Discord role names/IDs.
+    * Permission: `discordrolesync.roles` (default: op)
 
 ## Permissions
 
 * `discordrolesync.link`: Allows use of the `/link <CODE>` command to confirm a link. (Default: `true`)
-* `discordrolesync.unlink`: Allows use of the `/unlink` command. (Default: `true`)
+* `discordrolesync.unlink`: Allows use of the `/unlink` command to unlink oneself. (Default: `true`)
+* `discordrolesync.unlink.others`: Allows use of the `/unlink <player_username>` command to unlink other players. (Default: `op`)
 * `discordrolesync.denylink`: Allows use of the `/denylink` command. (Default: `true`)
 * `discordrolesync.discord`: Allows use of the base `/discord` command to view status and invite. (Default: `true`)
 * `discordrolesync.reload`: Allows use of the `/discord reload` subcommand. (Default: `op`)
 * `discordrolesync.inspect`: Allows use of the `/discord inspect <player>` subcommand. (Default: `op`)
-* `discordrolesync.manuallink`: Allows use of the `/discord manuallink <player> <discord_id>` subcommand. (Default:
-  `op`)
+* `discordrolesync.manuallink`: Allows use of the `/discord manuallink <player> <discord_id>` subcommand. (Default: `op`)
+* `discordrolesync.roles`: Allows use of the `/discord roles` subcommand. (Default: `op`)
 
 ## How Role Synchronization Works
 
@@ -172,8 +175,8 @@ Minecraft usernames and provides several administrative commands.
     * Periodic sync task (configurable interval).
     * Manual linking by an admin.
 * **Unlinking**: When accounts are unlinked:
-    * Mapped Discord roles are removed from the Discord user.
-    * In-game groups are **not** removed (as per current configuration).
+    * Mapped Discord roles (from `INGAME_TO_DISCORD` or `BOTH` mappings) are removed from the Discord user.
+    * Mapped in-game groups (from `DISCORD_TO_INGAME` or `BOTH` mappings) are attempted to be removed from the Minecraft player. The player will typically revert to a default group defined by the permissions plugin.
     * The synchronized Discord nickname is removed.
 
 ## Troubleshooting

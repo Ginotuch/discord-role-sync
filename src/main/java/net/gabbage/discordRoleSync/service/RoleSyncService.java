@@ -290,7 +290,12 @@ public class RoleSyncService {
                                 }
 
                                 Role discordRole = guild.getRoleById(mapping.discordRoleId());
-                                if (discordRole != null && discordMember.getRoles().contains(discordRole)) {
+                                if (discordRole == null) {
+                                    plugin.getLogger().warning("On unlink, could not find Discord role with ID: " + mapping.discordRoleId() + " (mapped to ingame group: " + mapping.ingameGroup() + ") in guild " + guild.getName() + ". Cannot remove this role from " + discordMember.getUser().getAsTag() + ".");
+                                    continue; // Skip to the next mapping
+                                }
+
+                                if (discordMember.getRoles().contains(discordRole)) { // Now discordRole is confirmed not null
                                     try {
                                         guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
                                             success -> plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " due to unlinking (sync direction: " + mapping.syncDirection() + ")."),

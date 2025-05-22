@@ -147,35 +147,35 @@ public class DiscordManager {
         }
 
         discordTaskQueue.submit(() -> {
-            guild.retrieveMemberById(userId).queue(member -> {
+            try {
+                net.dv8tion.jda.api.entities.Member member = guild.retrieveMemberById(userId).complete(true);
+                if (member == null) { // Should not happen with complete(true) as it throws on failure
+                    plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to set nickname (member was null post-complete).");
+                    if (onCompleteFailure != null) onCompleteFailure.run();
+                    return;
+                }
+
                 String currentNickname = member.getNickname();
                 if (nickname.equals(currentNickname)) {
-                plugin.getLogger().fine("Discord nickname for " + member.getUser().getAsTag() + " is already '" + nickname + "'. No update needed.");
+                    plugin.getLogger().fine("Discord nickname for " + member.getUser().getAsTag() + " is already '" + nickname + "'. No update needed.");
+                    if (onCompleteSuccess != null) onCompleteSuccess.run();
+                    return;
+                }
+
+                member.modifyNickname(nickname).reason("Linked to Minecraft account: " + nickname).complete(true);
+                plugin.getLogger().info("Set nickname for " + member.getUser().getAsTag() + " to '" + nickname + "' in guild " + guild.getName());
                 if (onCompleteSuccess != null) onCompleteSuccess.run();
-                return;
-            }
-            try {
-                member.modifyNickname(nickname).reason("Linked to Minecraft account: " + nickname).queue(
-                        success -> {
-                            plugin.getLogger().info("Set nickname for " + member.getUser().getAsTag() + " to '" + nickname + "' in guild " + guild.getName());
-                            if (onCompleteSuccess != null) onCompleteSuccess.run();
-                        },
-                        failure -> {
-                            plugin.getLogger().warning("Failed to set nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + ": " + failure.getMessage());
-                            if (onCompleteFailure != null) onCompleteFailure.run();
-                        }
-                );
+
             } catch (InsufficientPermissionException e) {
-                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to set nickname for " + member.getUser().getAsTag() + ".");
+                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to set nickname for user ID " + userId + ".");
                 if (onCompleteFailure != null) onCompleteFailure.run();
             } catch (HierarchyException e) {
-                plugin.getLogger().warning("Cannot set nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+                plugin.getLogger().warning("Cannot set nickname for user ID " + userId + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+                if (onCompleteFailure != null) onCompleteFailure.run();
+            } catch (Exception e) { // Catches other JDA exceptions like TimeoutException, RateLimitException from .complete(true)
+                plugin.getLogger().warning("Failed to set nickname for user ID " + userId + " in guild " + guildId + ": " + e.getMessage());
                 if (onCompleteFailure != null) onCompleteFailure.run();
             }
-        }, failure -> {
-            plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to set nickname.");
-            if (onCompleteFailure != null) onCompleteFailure.run();
-        });
         });
     }
 
@@ -198,34 +198,32 @@ public class DiscordManager {
         }
 
         discordTaskQueue.submit(() -> {
-            guild.retrieveMemberById(userId).queue(member -> {
-                try {
-                    if (member.getNickname() != null && !member.getNickname().isEmpty()) {
-                    member.modifyNickname(null).reason("Unlinked from Minecraft account").queue(
-                            success -> {
-                                plugin.getLogger().info("Reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName());
-                                if (onCompleteSuccess != null) onCompleteSuccess.run();
-                            },
-                            failure -> {
-                                plugin.getLogger().warning("Failed to reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + ": " + failure.getMessage());
-                                if (onCompleteFailure != null) onCompleteFailure.run();
-                            }
-                    );
+            try {
+                net.dv8tion.jda.api.entities.Member member = guild.retrieveMemberById(userId).complete(true);
+                if (member == null) { // Should not happen with complete(true)
+                    plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to reset nickname (member was null post-complete).");
+                    if (onCompleteFailure != null) onCompleteFailure.run();
+                    return;
+                }
+
+                if (member.getNickname() != null && !member.getNickname().isEmpty()) {
+                    member.modifyNickname(null).reason("Unlinked from Minecraft account").complete(true);
+                    plugin.getLogger().info("Reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName());
+                    if (onCompleteSuccess != null) onCompleteSuccess.run();
                 } else {
                     plugin.getLogger().fine("Nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " was already null or empty. No reset action needed.");
                     if (onCompleteSuccess != null) onCompleteSuccess.run();
                 }
             } catch (InsufficientPermissionException e) {
-                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to reset nickname for " + member.getUser().getAsTag() + ".");
+                plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to reset nickname for user ID " + userId + ".");
                 if (onCompleteFailure != null) onCompleteFailure.run();
             } catch (HierarchyException e) {
-                plugin.getLogger().warning("Cannot reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+                plugin.getLogger().warning("Cannot reset nickname for user ID " + userId + " in guild " + guild.getName() + " due to role hierarchy (bot's role is not high enough).");
+                if (onCompleteFailure != null) onCompleteFailure.run();
+            } catch (Exception e) { // Catches other JDA exceptions
+                plugin.getLogger().warning("Failed to reset nickname for user ID " + userId + " in guild " + guildId + ": " + e.getMessage());
                 if (onCompleteFailure != null) onCompleteFailure.run();
             }
-        }, failure -> {
-            plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to reset nickname.");
-            if (onCompleteFailure != null) onCompleteFailure.run();
-        });
         });
     }
 

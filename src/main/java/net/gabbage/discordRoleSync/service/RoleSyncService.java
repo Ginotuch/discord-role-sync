@@ -88,12 +88,7 @@ public class RoleSyncService {
             mappings.add(new RoleMapping(ingameGroup, discordRoleIdStr, discordRoleName, syncDirection));
         }
 
-        // Ensure parsedMappings is initialized before clearing and adding
-        if (this.parsedMappings == null) {
-            this.parsedMappings = new ArrayList<>();
-        } else {
-            this.parsedMappings.clear();
-        }
+        this.parsedMappings.clear();
         this.parsedMappings.addAll(mappings);
         plugin.getLogger().info("Loaded " + this.parsedMappings.size() + " role mappings.");
         if (this.parsedMappings.isEmpty() && configuredMappings != null && !configuredMappings.isEmpty()) {

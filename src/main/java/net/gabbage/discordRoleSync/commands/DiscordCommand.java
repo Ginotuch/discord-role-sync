@@ -67,10 +67,14 @@ public class DiscordCommand implements CommandExecutor, TabCompleter {
                 String[] subArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
                 subCommand.execute(plugin, sender, subArgs);
                 return true;
+            } else {
+                // Subcommand name was provided but not recognized
+                sender.sendMessage(configManager.getMessage("discord_command.unknown_subcommand", "%subcommand%", args[0]));
+                return true;
             }
         }
 
-        // Default action if no subcommand or invalid subcommand is given
+        // Default action only if no arguments are given (i.e., just /discord)
         if (defaultSubCommand.getPermission() != null && !sender.hasPermission(defaultSubCommand.getPermission())) {
             sender.sendMessage(configManager.getMessage("discord_command.no_permission"));
             return true;

@@ -63,6 +63,7 @@ messages:
     action_linked_line: "  &7To unlink your account, type &a/unlink" # This will be made clickable
     action_not_linked_line: "  &7To link, go to our Discord and type &a/link %your_mc_username%"
     no_permission: "&cYou do not have permission to use this command."
+    unknown_subcommand: "&cUnknown subcommand: &e%subcommand%&c. Type &a/discord&c for available commands."
   inspect:
     usage: "&cUsage: /discord inspect <minecraft_username>"
     player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."

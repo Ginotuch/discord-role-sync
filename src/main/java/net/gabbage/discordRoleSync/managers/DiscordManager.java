@@ -179,6 +179,8 @@ public class DiscordManager {
                             success -> plugin.getLogger().info("Reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName()),
                             failure -> plugin.getLogger().warning("Failed to reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + ": " + failure.getMessage())
                     );
+                } else {
+                    plugin.getLogger().fine("Nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName() + " was already null or empty. No reset action needed.");
                 }
             } catch (InsufficientPermissionException e) {
                 plugin.getLogger().warning("Bot lacks 'Manage Nicknames' permission in guild " + guild.getName() + " to reset nickname for " + member.getUser().getAsTag() + ".");

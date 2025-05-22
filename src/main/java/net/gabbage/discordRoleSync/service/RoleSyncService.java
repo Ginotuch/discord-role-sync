@@ -317,6 +317,47 @@ public class RoleSyncService {
         }
 
         // In-game group removal upon unlinking is disabled.
+
+        // Clear In-Game groups based on DISCORD_TO_INGAME or BOTH mappings
+        if (vaultPerms != null) {
+            for (RoleMapping mapping : parsedMappings) {
+                if ("DISCORD_TO_INGAME".equals(mapping.syncDirection()) || "BOTH".equals(mapping.syncDirection())) {
+                    // Check if player has the in-game group
+                    String primaryGroup = vaultPerms.getPrimaryGroup(worldName, offlinePlayer); // Use worldName derived earlier
+                    boolean playerHasIngameGroup = primaryGroup != null && primaryGroup.equalsIgnoreCase(mapping.ingameGroup());
+                    
+                    // More robust check: iterate all groups if primary group check isn't sufficient
+                    // For simplicity, we'll stick to primary group for now, assuming it's what D2I sync would have affected.
+                    // If your setup uses secondary groups heavily for D2I, this might need adjustment.
+                    // String[] playerGroups = vaultPerms.getPlayerGroups(worldName, offlinePlayer);
+                    // boolean playerHasIngameGroup = false;
+                    // if (playerGroups != null) {
+                    //    for (String group : playerGroups) {
+                    //        if (group.equalsIgnoreCase(mapping.ingameGroup())) {
+                    //            playerHasIngameGroup = true;
+                    //            break;
+                    //        }
+                    //    }
+                    // }
+
+
+                    if (playerHasIngameGroup) {
+                        plugin.getLogger().fine("Attempting to remove in-game group '" + mapping.ingameGroup() + "' from " + playerName + " due to unlinking (sync direction: " + mapping.syncDirection() + ").");
+                        // Run on main thread for Bukkit API calls that modify player data
+                        final String groupToRemove = mapping.ingameGroup(); // Effectively final for lambda
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            if (vaultPerms.playerRemoveGroup(null, offlinePlayer, groupToRemove)) { // Using null for world
+                                plugin.getLogger().fine("Successfully removed in-game group '" + groupToRemove + "' from " + playerName + " on unlink.");
+                            } else {
+                                plugin.getLogger().warning("Failed to remove in-game group '" + groupToRemove + "' from " + playerName + " on unlink. Check Vault-compatible permissions plugin logs.");
+                            }
+                        });
+                    }
+                }
+            }
+        } else {
+            plugin.getLogger().warning("Vault permissions not available. Cannot clear in-game groups for " + playerName + " on unlink.");
+        }
     }
 
     public List<RoleMapping> getParsedMappings() {

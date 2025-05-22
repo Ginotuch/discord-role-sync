@@ -3,8 +3,9 @@ package net.gabbage.discordRoleSync.commands.discord;
 import net.dv8tion.jda.api.entities.User;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
-import net.gabbage.discordRoleSync.managers.DiscordManager;
-import net.gabbage.discordRoleSync.service.RoleSyncService;
+import net.gabbage.discordRoleSync.managers.DiscordManager; // Keep if used for JDA checks, though LinkManager handles JDA interactions
+import net.gabbage.discordRoleSync.managers.LinkManager; // Import LinkManager
+import net.gabbage.discordRoleSync.service.RoleSyncService; // Keep if directly used, though LinkManager centralizes this
 import net.gabbage.discordRoleSync.storage.LinkedPlayersManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -59,8 +60,8 @@ public class ManualLinkSubCommand implements IDiscordSubCommand {
         }
 
         LinkedPlayersManager linkedPlayersManager = plugin.getLinkedPlayersManager();
-        DiscordManager discordManager = plugin.getDiscordManager();
-        RoleSyncService roleSyncService = plugin.getRoleSyncService();
+        LinkManager linkManager = plugin.getLinkManager(); // Get LinkManager instance
+        DiscordManager discordManager = plugin.getDiscordManager(); // For JDA check before retrieving user for messages
 
         // Check if Minecraft account is already linked
         if (linkedPlayersManager.isMcAccountLinked(targetUUID)) {
@@ -94,24 +95,15 @@ public class ManualLinkSubCommand implements IDiscordSubCommand {
             return;
         }
 
-        // Perform the link
-        linkedPlayersManager.addLink(targetUUID, discordIdString);
-
-        // Asynchronously set nickname and synchronize roles
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            if (configManager.shouldSynchronizeDiscordNickname()) {
-                if (discordManager != null) { // Ensure discordManager is not null
-                    discordManager.setDiscordNickname(discordIdString, actualMcUsername);
-                }
-            }
-            if (roleSyncService != null) { // Ensure roleSyncService is not null
-                 roleSyncService.synchronizeRoles(targetUUID, discordIdString);
-            }
-        });
-
-        sender.sendMessage(configManager.getMessage("manuallink.success",
-                "%mc_username%", actualMcUsername,
-                "%discord_user_id%", discordIdString));
+        // Perform the link and all subsequent actions using LinkManager
+        if (linkManager.performManualLink(targetOfflinePlayer, discordIdString)) {
+            sender.sendMessage(configManager.getMessage("manuallink.success",
+                    "%mc_username%", actualMcUsername,
+                    "%discord_user_id%", discordIdString));
+        } else {
+            // performManualLink logs details, provide a generic error to sender
+            sender.sendMessage(configManager.getMessage("manuallink.error_linking"));
+        }
     }
 
     @Override

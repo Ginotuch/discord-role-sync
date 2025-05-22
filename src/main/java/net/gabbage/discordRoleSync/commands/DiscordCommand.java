@@ -5,6 +5,7 @@ import net.gabbage.discordRoleSync.commands.discord.IDiscordSubCommand;
 import net.gabbage.discordRoleSync.commands.discord.InspectSubCommand;
 import net.gabbage.discordRoleSync.commands.discord.ManualLinkSubCommand; // Import ManualLinkSubCommand
 import net.gabbage.discordRoleSync.commands.discord.ReloadSubCommand;
+import net.gabbage.discordRoleSync.commands.discord.RolesSubCommand; // Import RolesSubCommand
 import net.gabbage.discordRoleSync.commands.discord.StatusSubCommand;
 import net.gabbage.discordRoleSync.managers.ConfigManager;
 import org.bukkit.command.Command;
@@ -39,6 +40,7 @@ public class DiscordCommand implements CommandExecutor, TabCompleter {
         registerSubCommand(new ReloadSubCommand());
         registerSubCommand(new InspectSubCommand());
         registerSubCommand(new ManualLinkSubCommand()); // Register ManualLinkSubCommand
+        registerSubCommand(new RolesSubCommand()); // Register RolesSubCommand
         registerSubCommand(this.defaultSubCommand); // Register status as a fallback/default
     }
 

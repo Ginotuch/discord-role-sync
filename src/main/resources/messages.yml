@@ -67,9 +67,9 @@ messages:
     usage: "&cUsage: /discord inspect <minecraft_username>"
     player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."
     inspecting_header: "&5[DISCORD] &r&7Inspecting &e%mc_username%&7:"
-    linked_to: "  &aLinked &7to Discord: &e%discord_user_tag% &7(ID: &e%discord_user_id%&7)"
-    not_linked: "  &cNot linked &7to any Discord account."
-    error_retrieving_discord_user: "  &aLinked &7to Discord ID: &e%discord_user_id% &7(Could not retrieve Discord username)."
+    linked_to: "  &e%mc_username%&a linked &7to Discord: &e%discord_user_tag% &7(ID: &e%discord_user_id%&7)"
+    not_linked: "  &e%mc_username%&c not linked &7to any Discord account."
+    error_retrieving_discord_user: "  &e%mc_username%&a linked &7to Discord ID: &e%discord_user_id% &7(Could not retrieve Discord username)."
   manuallink:
     usage: "&cUsage: /discord manuallink <minecraft_username> <discord_id>"
     player_not_found: "&cPlayer &e%mc_username%&c not found or has not played before."

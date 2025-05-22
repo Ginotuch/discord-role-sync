@@ -62,6 +62,7 @@ public class InspectSubCommand implements IDiscordSubCommand {
                 discordManager.getJda().retrieveUserById(discordId).queue(
                     (User discordUser) -> {
                         sender.sendMessage(configManager.getMessage("inspect.linked_to",
+                                "%mc_username%", actualUsername,
                                 "%discord_user_tag%", discordUser.getAsTag(),
                                 "%discord_user_id%", discordId
                         ));
@@ -69,6 +70,7 @@ public class InspectSubCommand implements IDiscordSubCommand {
                     (Throwable failure) -> {
                         plugin.getLogger().warning("Failed to retrieve Discord user " + discordId + " for inspect command: " + failure.getMessage());
                         sender.sendMessage(configManager.getMessage("inspect.error_retrieving_discord_user",
+                                "%mc_username%", actualUsername,
                                 "%discord_user_id%", discordId
                         ));
                     }
@@ -76,11 +78,12 @@ public class InspectSubCommand implements IDiscordSubCommand {
             } else {
                 // JDA not available, just show the ID
                 sender.sendMessage(configManager.getMessage("inspect.error_retrieving_discord_user",
+                        "%mc_username%", actualUsername,
                         "%discord_user_id%", discordId
                 ));
             }
         } else {
-            sender.sendMessage(configManager.getMessage("inspect.not_linked"));
+            sender.sendMessage(configManager.getMessage("inspect.not_linked", "%mc_username%", actualUsername));
         }
     }
 

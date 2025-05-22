@@ -98,15 +98,35 @@ public class DiscordManager {
         if (discordTaskQueue != null) {
             discordTaskQueue.shutdown();
         }
-        if (jda != null) {
-            plugin.getLogger().info("Attempting to disconnect from Discord...");
+
+        if (jda != null && jda.getStatus() != JDA.Status.SHUTDOWN && jda.getStatus() != JDA.Status.SHUTTING_DOWN) {
+            try {
+                String currentGuildId = plugin.getConfigManager().getDiscordGuildId(); // Get guild ID from config this JDA instance was using
+                if (currentGuildId != null && !currentGuildId.isEmpty()) {
+                    Guild guild = jda.getGuildById(currentGuildId);
+                    if (guild != null) {
+                        plugin.getLogger().info("Unregistering commands from guild: " + guild.getName() + " (" + currentGuildId + ")");
+                        guild.updateCommands().addCommands(java.util.Collections.emptyList()).complete(true);
+                        plugin.getLogger().info("Successfully unregistered commands from guild " + currentGuildId);
+                    } else {
+                        plugin.getLogger().warning("Could not find guild " + currentGuildId + " to unregister commands during shutdown. Bot might have been removed or Guild ID was incorrect for this JDA session.");
+                    }
+                } else {
+                    plugin.getLogger().info("Unregistering global commands.");
+                    jda.updateCommands().addCommands(java.util.Collections.emptyList()).complete(true);
+                    plugin.getLogger().info("Successfully unregistered global commands.");
+                }
+            } catch (Exception e) { // Catch exceptions from .complete(), e.g., InsufficientPermissionException, TimeoutException
+                plugin.getLogger().warning("Failed to unregister commands during shutdown: " + e.getMessage());
+            }
+
+            plugin.getLogger().info("Attempting to disconnect from Discord (JDA shutdown)...");
             jda.shutdown(); // Initiate shutdown
             try {
                 // Wait up to 10 seconds for JDA to finish its shutdown processes
                 if (!jda.awaitShutdown(Duration.ofSeconds(10))) {
                     plugin.getLogger().warning("JDA did not shut down gracefully within 10 seconds. Forcing shutdown...");
                     jda.shutdownNow(); // Forcefully shut down remaining JDA threads
-                    // Optionally, wait a little longer for forced shutdown
                     if (!jda.awaitShutdown(Duration.ofSeconds(5))) {
                         plugin.getLogger().severe("JDA did not shut down even after forcing. There might be lingering threads.");
                     }
@@ -117,7 +137,11 @@ public class DiscordManager {
                 jda.shutdownNow();
                 Thread.currentThread().interrupt(); // Preserve interrupt status
             }
+        } else if (jda != null) {
+            plugin.getLogger().info("JDA already shutting down or shutdown. Skipping command unregistration and JDA shutdown sequence.");
         }
+        // Ensure jda is nullified if it was previously not null, even if shutdown was skipped due to status
+        this.jda = null; 
     }
 
     public JDA getJda() {

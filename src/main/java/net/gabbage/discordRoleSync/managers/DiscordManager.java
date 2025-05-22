@@ -13,15 +13,18 @@ import net.dv8tion.jda.api.exceptions.HierarchyException;
 import java.time.Duration;
 import net.gabbage.discordRoleSync.DiscordRoleSync;
 import net.gabbage.discordRoleSync.discord.DiscordCommandListener;
+import net.gabbage.discordRoleSync.util.DiscordTaskQueue;
 
 
 public class DiscordManager {
 
     private final DiscordRoleSync plugin;
     private JDA jda;
+    private final DiscordTaskQueue discordTaskQueue;
 
     public DiscordManager(DiscordRoleSync plugin) {
         this.plugin = plugin;
+        this.discordTaskQueue = new DiscordTaskQueue(plugin);
     }
 
     public void connect() {
@@ -92,6 +95,9 @@ public class DiscordManager {
 
 
     public void disconnect() {
+        if (discordTaskQueue != null) {
+            discordTaskQueue.shutdown();
+        }
         if (jda != null) {
             plugin.getLogger().info("Attempting to disconnect from Discord...");
             jda.shutdown(); // Initiate shutdown
@@ -118,6 +124,10 @@ public class DiscordManager {
         return jda;
     }
 
+    public DiscordTaskQueue getDiscordTaskQueue() {
+        return discordTaskQueue;
+    }
+
     public void setDiscordNickname(String userId, String nickname, Runnable onCompleteSuccess, Runnable onCompleteFailure) {
         if (jda == null || !plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
             if (onCompleteFailure != null) onCompleteFailure.run();
@@ -136,9 +146,10 @@ public class DiscordManager {
             return;
         }
 
-        guild.retrieveMemberById(userId).queue(member -> {
-            String currentNickname = member.getNickname();
-            if (nickname.equals(currentNickname)) {
+        discordTaskQueue.submit(() -> {
+            guild.retrieveMemberById(userId).queue(member -> {
+                String currentNickname = member.getNickname();
+                if (nickname.equals(currentNickname)) {
                 plugin.getLogger().fine("Discord nickname for " + member.getUser().getAsTag() + " is already '" + nickname + "'. No update needed.");
                 if (onCompleteSuccess != null) onCompleteSuccess.run();
                 return;
@@ -165,6 +176,7 @@ public class DiscordManager {
             plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to set nickname.");
             if (onCompleteFailure != null) onCompleteFailure.run();
         });
+        });
     }
 
     public void resetDiscordNickname(String userId, Runnable onCompleteSuccess, Runnable onCompleteFailure) {
@@ -185,9 +197,10 @@ public class DiscordManager {
             return;
         }
 
-        guild.retrieveMemberById(userId).queue(member -> {
-            try {
-                if (member.getNickname() != null && !member.getNickname().isEmpty()) {
+        discordTaskQueue.submit(() -> {
+            guild.retrieveMemberById(userId).queue(member -> {
+                try {
+                    if (member.getNickname() != null && !member.getNickname().isEmpty()) {
                     member.modifyNickname(null).reason("Unlinked from Minecraft account").queue(
                             success -> {
                                 plugin.getLogger().info("Reset nickname for " + member.getUser().getAsTag() + " in guild " + guild.getName());
@@ -212,6 +225,7 @@ public class DiscordManager {
         }, failure -> {
             plugin.getLogger().warning("Failed to retrieve member " + userId + " in guild " + guildId + " to reset nickname.");
             if (onCompleteFailure != null) onCompleteFailure.run();
+        });
         });
     }
 

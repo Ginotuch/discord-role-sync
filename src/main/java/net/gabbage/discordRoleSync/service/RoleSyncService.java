@@ -236,37 +236,41 @@ public class RoleSyncService {
         boolean memberHasDiscordRole = discordMember.getRoles().contains(discordRole);
 
         if (playerHasIngameGroup && !memberHasDiscordRole) {
-            try {
-                guild.addRoleToMember(discordMember, discordRole).reason("Role Sync: User has in-game group " + mapping.ingameGroup()).queue(
-                    success -> {
-                        plugin.getLogger().fine("[I2D] Added Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag());
-                        finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleSuccess_I2D_" + discordRole.getName(), "Sync");
-                    },
-                    failure -> {
-                        plugin.getLogger().log(Level.WARNING, "[I2D] Failed to add Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag(), failure);
-                        finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleFailure_I2D_" + discordRole.getName(), "Sync");
-                    }
-                );
-            } catch (Exception e) { // Catch broader exceptions like Permission or Hierarchy
-                plugin.getLogger().warning("[I2D] Exception adding role '" + discordRole.getName() + "': " + e.getMessage());
-                finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleException_I2D_" + discordRole.getName(), "Sync");
-            }
+            plugin.getDiscordManager().getDiscordTaskQueue().submit(() -> {
+                try {
+                    guild.addRoleToMember(discordMember, discordRole).reason("Role Sync: User has in-game group " + mapping.ingameGroup()).queue(
+                        success -> {
+                            plugin.getLogger().fine("[I2D] Added Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag());
+                            finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleSuccess_I2D_" + discordRole.getName(), "Sync");
+                        },
+                        failure -> {
+                            plugin.getLogger().log(Level.WARNING, "[I2D] Failed to add Discord role '" + discordRole.getName() + "' to " + discordMember.getUser().getAsTag(), failure);
+                            finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleFailure_I2D_" + discordRole.getName(), "Sync");
+                        }
+                    );
+                } catch (Exception e) { // Catch broader exceptions like Permission or Hierarchy
+                    plugin.getLogger().warning("[I2D] Exception adding role '" + discordRole.getName() + "': " + e.getMessage());
+                    finalizePlayerProcessing(mcUUID, playerName, opsCounter, "AddRoleException_I2D_" + discordRole.getName(), "Sync");
+                }
+            });
         } else if (!playerHasIngameGroup && memberHasDiscordRole) {
-            try {
-                guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User no longer has in-game group " + mapping.ingameGroup()).queue(
-                    success -> {
-                        plugin.getLogger().fine("[I2D] Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag());
-                        finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleSuccess_I2D_" + discordRole.getName(), "Sync");
-                    },
-                    failure -> {
-                        plugin.getLogger().log(Level.WARNING, "[I2D] Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag(), failure);
-                        finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleFailure_I2D_" + discordRole.getName(), "Sync");
-                    }
-                );
-            } catch (Exception e) {
-                plugin.getLogger().warning("[I2D] Exception removing role '" + discordRole.getName() + "': " + e.getMessage());
-                finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleException_I2D_" + discordRole.getName(), "Sync");
-            }
+            plugin.getDiscordManager().getDiscordTaskQueue().submit(() -> {
+                try {
+                    guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User no longer has in-game group " + mapping.ingameGroup()).queue(
+                        success -> {
+                            plugin.getLogger().fine("[I2D] Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag());
+                            finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleSuccess_I2D_" + discordRole.getName(), "Sync");
+                        },
+                        failure -> {
+                            plugin.getLogger().log(Level.WARNING, "[I2D] Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag(), failure);
+                            finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleFailure_I2D_" + discordRole.getName(), "Sync");
+                        }
+                    );
+                } catch (Exception e) {
+                    plugin.getLogger().warning("[I2D] Exception removing role '" + discordRole.getName() + "': " + e.getMessage());
+                    finalizePlayerProcessing(mcUUID, playerName, opsCounter, "RemoveRoleException_I2D_" + discordRole.getName(), "Sync");
+                }
+            });
         } else { // No action needed for this mapping
             finalizePlayerProcessing(mcUUID, playerName, opsCounter, "NoAction_I2D_" + mapping.ingameGroup(), "Sync");
         }
@@ -375,21 +379,23 @@ public class RoleSyncService {
                                 }
                                 if (discordMember.getRoles().contains(discordRole)) {
                                     operationsCounter.incrementAndGet();
-                                    try {
-                                        guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
-                                            success -> {
-                                                plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.");
-                                                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleSuccess_" + discordRole.getName(), "Unlink");
-                                            },
-                                            failure -> {
-                                                plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure);
-                                                finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleFailure_" + discordRole.getName(), "Unlink");
-                                            }
-                                        );
-                                    } catch (Exception e) {
-                                        plugin.getLogger().warning("Exception removing Discord role '" + discordRole.getName() + "' on unlink: " + e.getMessage());
-                                        finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleException_" + discordRole.getName(), "Unlink");
-                                    }
+                                    plugin.getDiscordManager().getDiscordTaskQueue().submit(() -> {
+                                        try {
+                                            guild.removeRoleFromMember(discordMember, discordRole).reason("Role Sync: User unlinked Minecraft account.").queue(
+                                                success -> {
+                                                    plugin.getLogger().fine("Removed Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.");
+                                                    finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleSuccess_" + discordRole.getName(), "Unlink");
+                                                },
+                                                failure -> {
+                                                    plugin.getLogger().log(Level.WARNING, "Failed to remove Discord role '" + discordRole.getName() + "' from " + discordMember.getUser().getAsTag() + " on unlink.", failure);
+                                                    finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleFailure_" + discordRole.getName(), "Unlink");
+                                                }
+                                            );
+                                        } catch (Exception e) {
+                                            plugin.getLogger().warning("Exception removing Discord role '" + discordRole.getName() + "' on unlink: " + e.getMessage());
+                                            finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "RemoveDiscordRoleException_" + discordRole.getName(), "Unlink");
+                                        }
+                                    });
                                 }
                             }
                             finalizePlayerProcessing(minecraftPlayerUUID, playerName, operationsCounter, "Discord Role Clearing Logic Complete (after processing mappings)", "Unlink"); // For retrieveMemberById for roles

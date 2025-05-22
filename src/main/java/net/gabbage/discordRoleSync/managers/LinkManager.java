@@ -170,4 +170,47 @@ public class LinkManager {
             });
         }
     }
+
+    /**
+     * Performs all necessary actions to finalize a manual link.
+     * This includes saving the link, assigning default roles, syncing nickname, and syncing roles.
+     * @param targetPlayer The Minecraft player being linked.
+     * @param discordId The Discord ID being linked.
+     * @return true if the link was successfully processed.
+     */
+    public boolean performManualLink(OfflinePlayer targetPlayer, String discordId) {
+        UUID mcUUID = targetPlayer.getUniqueId();
+        String playerName = targetPlayer.getName();
+
+        if (playerName == null) {
+            plugin.getLogger().warning("Cannot perform manual link for UUID " + mcUUID + ": Player name is null (likely never joined).");
+            return false;
+        }
+
+        // Add the link to storage
+        linkedPlayersManager.addLink(mcUUID, discordId);
+
+        // Assign default role if configured and conditions met
+        if (plugin.getConfigManager().isDefaultRoleAssignmentEnabled()) {
+            assignDefaultRoleIfNeeded(mcUUID);
+        }
+
+        // Set Discord Nickname if feature is enabled
+        if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            final String discordUserId = discordId; // Effectively final for lambda
+            // The method parameter 'minecraftPlayerUUID' will be captured by the lambda.
+            // The UUID from request.getMinecraftPlayerUUID() should be identical to the parameter.
+
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                // Player name is already available from targetPlayer.getName()
+                plugin.getDiscordManager().setDiscordNickname(discordUserId, playerName);
+            });
+        }
+
+        // Trigger role synchronization
+        plugin.getRoleSyncService().synchronizeRoles(mcUUID, discordId);
+
+        plugin.getLogger().info("Manually linked Minecraft player " + playerName + " (UUID: " + mcUUID + ") with Discord ID " + discordId + ". Post-link actions (nickname, roles) triggered.");
+        return true;
+    }
 }

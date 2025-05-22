@@ -24,7 +24,7 @@ public class RoleSyncService {
     private final ConfigManager configManager;
     private final Permission vaultPerms;
 
-    private record RoleMapping(String ingameGroup, String discordRoleId, String discordRoleName, String syncDirection) {}
+    public record RoleMapping(String ingameGroup, String discordRoleId, String discordRoleName, String syncDirection) {}
     private List<RoleMapping> parsedMappings; // Made non-final, populated by loadAndParseRoleMappings
 
     public RoleSyncService(DiscordRoleSync plugin) {
@@ -317,5 +317,9 @@ public class RoleSyncService {
         }
 
         // In-game group removal upon unlinking is disabled.
+    }
+
+    public List<RoleMapping> getParsedMappings() {
+        return new ArrayList<>(parsedMappings); // Return a copy to prevent external modification
     }
 }

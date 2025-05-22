@@ -210,9 +210,10 @@ public class DiscordCommandListener extends ListenerAdapter {
             linkedPlayersManager.removeLinkByDiscordId(discordUserId); // This also saves to file
 
             // Reset Discord Nickname if feature is enabled
-            if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
-                plugin.getDiscordManager().resetDiscordNickname(discordUserId);
-            }
+            // This is now handled by clearRolesOnUnlink to ensure it's part of the atomic operations.
+            // if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            //    plugin.getDiscordManager().resetDiscordNickname(discordUserId);
+            // }
 
             // Clear roles
             plugin.getRoleSyncService().clearRolesOnUnlink(mcUUID, discordUserId);

@@ -116,12 +116,13 @@ public class LinkManager {
             linkedPlayersManager.removeLinkByMcUUID(playerUUID); // This also removes from discordToMcLinks
 
             // Reset Discord Nickname if feature is enabled
-            if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
-                plugin.getDiscordManager().resetDiscordNickname(discordId);
-            }
+            // This is now part of clearRolesOnUnlink's responsibility to ensure sequence
+            // if (plugin.getConfigManager().shouldSynchronizeDiscordNickname()) {
+            //    plugin.getDiscordManager().resetDiscordNickname(discordId, null, null); // Call with null callbacks if not part of a larger sequence here
+            // }
 
-            plugin.getLogger().info("Player " + playerName + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ".");
-            plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId);
+            plugin.getLogger().info("Player " + playerName + " (" + playerUUID + ") unlinked from Discord ID " + discordId + ". Triggering role clearing and nickname reset.");
+            plugin.getRoleSyncService().clearRolesOnUnlink(playerUUID, discordId); // This will now handle nickname reset as well
             return true;
         }
         return false;
